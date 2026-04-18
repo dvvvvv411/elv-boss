@@ -148,15 +148,16 @@ function ShopsContent() {
 
                 {/* Logo / Avatar */}
                 {shop.logo_url ? (
-                  <img
-                    src={shop.logo_url}
-                    alt={shop.shop_name}
-                    className="h-14 w-14 rounded-xl object-cover border border-slate-200 shrink-0"
-                    style={{ boxShadow: `0 0 0 2px ${shop.accent_color}25` }}
-                  />
+                  <div className="h-12 flex items-center shrink-0">
+                    <img
+                      src={shop.logo_url}
+                      alt={shop.shop_name}
+                      className="h-12 w-auto max-w-[140px] object-contain"
+                    />
+                  </div>
                 ) : (
                   <div
-                    className="h-14 w-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shrink-0"
+                    className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
                     style={{
                       background: shop.accent_color,
                       boxShadow: `0 0 0 2px ${shop.accent_color}25`,
