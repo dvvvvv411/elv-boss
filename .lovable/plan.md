@@ -1,14 +1,42 @@
 
-Fix: Login-Form soll vertikal mittig in der rechten Hälfte sitzen.
+Ziel: `/auth` so korrigieren, dass die Seite als ein einziges fullscreen 1/2-Layout erscheint: links grüne Fläche mit Trust-Inhalten, rechts weißes Login/Register-Panel, beide gleichzeitig im selben Viewport.
 
-Aktuell nutzt die rechte `<section>` zwar `flex items-center justify-center`, aber die linke `<aside>` mit `min-h-screen` und `justify-between` (Header/Body/Footer) zwingt das Grid auf volle Höhe — die rechte Section sollte also eigentlich mittig sein. Wenn sie es nicht ist, liegt es daran, dass die Section selbst keine `min-h-screen` hat und im Grid die Höhe der `aside` erbt — das Form sitzt aber oben, weil der Inhalt kürzer ist als die Spalte.
+Befund:
+- Der eigentliche Layout-Bug sitzt nicht am `grid-cols-2`.
+- In `src/routes/auth.tsx` steht `<Toaster />` direkt innerhalb von `<main className="grid ... lg:grid-cols-2">`.
+- Dadurch ist der Toaster selbst ein zusätzliches Grid-Item.
+- Bei 2 Spalten autoplaced das Grid dann:
+  - Grid-Item 1: Toaster
+  - Grid-Item 2: linkes Panel
+  - Grid-Item 3: rechtes Panel
+- Ergebnis: Die sichtbaren Panels landen nicht nebeneinander, sondern in unterschiedlichen Grid-Zellen/Zeilen. Genau daher wirkt es wie „oben eins, unten eins“ statt ein gemeinsames fullscreen Bild.
 
-Wahrscheinlichere Ursache: die `<section>` hat zwar `flex items-center justify-center`, aber durch das Grid mit `lg:grid-cols-2` streckt sie sich automatisch auf die Höhe der `aside`. Sollte mittig sein. Der User sieht es aber nicht mittig → vermutlich rendert auf 1143px Viewport noch das Mobile-Stacking (lg = 1024px, also greift lg:grid-cols-2). Form müsste mittig sein.
+Umsetzung:
+1. `src/routes/auth.tsx` bereinigen
+- `<Toaster />` aus dem Grid-Flow entfernen.
+- Entweder vor/nach `<main>` rendern oder in einen absolut/fixed unabhängigen Wrapper setzen.
+- Wichtig: Im 2-Spalten-Grid dürfen nur noch genau 2 direkte Kinder liegen:
+  - `<aside>` links
+  - `<section>` rechts
 
-Fix-Ansatz: explizit `min-h-screen` auf die `<section>` setzen, damit auf jeden Fall vertikal zentriert wird, unabhängig vom Grid-Stretching.
+2. Layout hart vereinfachen
+- `main`: `min-h-screen grid grid-cols-1 lg:grid-cols-2`
+- `aside`: linke Hälfte, grün, volle Höhe
+- `section`: rechte Hälfte, volle Höhe, `flex items-center justify-center`
+- keine weiteren direkten Grid-Kinder
 
-Änderung in `src/routes/auth.tsx`:
-- rechte `<section>`: `min-h-screen` ergänzen
-- damit ist `flex items-center justify-center` garantiert wirksam und das Form sitzt sowohl horizontal als auch vertikal exakt mittig in der rechten Hälfte
+3. Zentrierung rechts absichern
+- rechte `section` bei `min-h-screen` belassen
+- inneren Auth-Container mit fixer Max-Breite mittig halten
+- so bleibt Login/Register vertikal und horizontal zentriert
 
-Keine weiteren Änderungen. Auth-Logik, Branding-Panel und Responsive-Verhalten bleiben unangetastet.
+4. Keine Logikänderungen
+- `useAuth`, Redirect nach `/admin`, `signInWithPassword`, `signUp`, Zod-Validierung und Toast-Meldungen bleiben unverändert
+- nur Struktur/Layout wird korrigiert
+
+Ergebnis nach Fix:
+- Beide Hälften sind gleichzeitig fullscreen sichtbar
+- links volle grüne Hälfte
+- rechts volle weiße Hälfte mit mittigem Formular
+- kein Split in obere/untere Bereiche mehr
+- keine „4-Quadranten“-Optik mehr
