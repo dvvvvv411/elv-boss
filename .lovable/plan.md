@@ -1,33 +1,29 @@
 
 
 ## Problem
-Mit Flat-Dot-Routing macht TanStack `admin.shops.tsx` zu einem **Child** von `admin.tsx`. Damit das Child gerendert wird, muss der Parent `admin.tsx` einen `<Outlet />` rendern. Aktuell rendert `admin.tsx` aber direkt das Dashboard — egal welche `/admin/*` URL aufgerufen wird, es kommt immer das Dashboard.
+Identisches Routing-Problem wie bei `admin.tsx` zuvor. Im Flat-Dot-Routing ist `admin.shops.tsx` der **Parent** von `admin.shops.new.tsx` und `admin.shops.$id.edit.tsx` (siehe `routeTree.gen.ts`: `AdminShopsNewRoute … getParentRoute: () => AdminShopsRoute`).
 
-Beweis aus `routeTree.gen.ts`:
-```
-AdminShopsRoute … getParentRoute: () => AdminRoute
-```
-→ `admin.shops` ist verschachtelt unter `admin`.
+`admin.shops.tsx` rendert aktuell aber direkt die Card-Liste statt einen `<Outlet />` — daher zeigt `/admin/shops/new` weiterhin die Card-Liste der Parent-Route.
 
 ## Lösung
-Routing entkoppeln, sodass `/admin` (Dashboard) und `/admin/shops` (Liste) eigenständige Seiten sind, nicht Parent/Child.
+Gleiche Variante wie bei admin: Liste auf eigene Index-Route umziehen.
 
-**Variante A (sauber, gewählt):** Dashboard auf eigene Index-Route umziehen.
-- `src/routes/admin.tsx` wird zur **Layout-Route**, die nur `<Outlet />` rendert (kein UI/AdminShell hier nötig, weil jede Seite ihren eigenen `AdminShell` hat).
-- Neue Datei `src/routes/admin.index.tsx` enthält das bisherige Dashboard-UI (`AdminPage` + `DashboardContent`, Konstanten, Imports).
-- `admin.shops.tsx`, `admin.shops.new.tsx`, `admin.shops.$id.edit.tsx` bleiben unverändert — sie rendern jetzt korrekt im Outlet.
-
-## Änderungen
-1. `src/routes/admin.tsx` → minimal:
+1. **`src/routes/admin.shops.tsx`** → reduzieren auf Layout-Route:
    ```tsx
    import { createFileRoute, Outlet } from "@tanstack/react-router";
-   export const Route = createFileRoute("/admin")({ component: () => <Outlet /> });
+   export const Route = createFileRoute("/admin/shops")({
+     component: () => <Outlet />,
+   });
    ```
-2. `src/routes/admin.index.tsx` (neu) → bisheriger Inhalt von `admin.tsx` (Dashboard mit `AdminShell` + `DashboardContent`), Route = `createFileRoute("/admin/")`.
-3. `routeTree.gen.ts` regeneriert sich automatisch.
+
+2. **`src/routes/admin.shops.index.tsx`** (neu) → bisheriger Inhalt von `admin.shops.tsx` (ShopsPage + ShopsContent, Imports, Konstanten), Route = `createFileRoute("/admin/shops/")`.
+
+3. `admin.shops.new.tsx` und `admin.shops.$id.edit.tsx` bleiben unverändert — rendern jetzt korrekt im Outlet.
+
+4. `routeTree.gen.ts` regeneriert sich automatisch.
 
 ## Ergebnis
-- `/admin` zeigt Dashboard
-- `/admin/shops` zeigt Shops-Card-Liste
-- `/admin/shops/new` und `/admin/shops/$id/edit` funktionieren wie vorgesehen
+- `/admin/shops` → Card-Liste
+- `/admin/shops/new` → Erstell-Formular
+- `/admin/shops/:id/edit` → Bearbeiten-Formular
 
