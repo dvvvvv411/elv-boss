@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminShopsRouteImport } from './routes/admin.shops'
 import { Route as AdminShopsNewRouteImport } from './routes/admin.shops.new'
 import { Route as AdminShopsIdEditRouteImport } from './routes/admin.shops.$id.edit'
@@ -30,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminShopsRoute = AdminShopsRouteImport.update({
   id: '/shops',
@@ -52,14 +58,15 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
+  '/admin': typeof AdminIndexRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
 }
@@ -69,6 +76,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
 }
@@ -79,14 +87,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/admin/shops'
+    | '/admin/'
     | '/admin/shops/new'
     | '/admin/shops/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/auth'
     | '/admin/shops'
+    | '/admin'
     | '/admin/shops/new'
     | '/admin/shops/$id/edit'
   id:
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/admin/shops'
+    | '/admin/'
     | '/admin/shops/new'
     | '/admin/shops/$id/edit'
   fileRoutesById: FileRoutesById
@@ -127,6 +137,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/shops': {
       id: '/admin/shops'
@@ -168,10 +185,12 @@ const AdminShopsRouteWithChildren = AdminShopsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminShopsRoute: typeof AdminShopsRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminShopsRoute: AdminShopsRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -184,3 +203,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
