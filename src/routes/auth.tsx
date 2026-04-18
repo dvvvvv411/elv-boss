@@ -82,26 +82,25 @@ function AuthPage() {
           </Link>
         </div>
 
-        <div className="relative z-10 my-10 lg:my-0">
+        <div className="relative z-10 my-10 lg:my-0 max-w-lg">
           <h1 className="text-5xl lg:text-7xl font-bold tracking-[0.06em]">ELV BOSS</h1>
           <p className="mt-3 text-sm lg:text-base font-medium uppercase tracking-[0.35em] text-white/80">
             Die Gelddruckmaschine
           </p>
 
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+          <ul className="mt-12 flex flex-col gap-5">
             {trustItems.map(({ icon: Icon, title, desc }) => (
-              <div
-                key={title}
-                className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-4 hover:bg-white/15 transition-colors"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
+              <li key={title} className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/15">
                   <Icon className="h-5 w-5" />
                 </div>
-                <div className="mt-3 font-semibold">{title}</div>
-                <div className="text-sm text-white/80">{desc}</div>
-              </div>
+                <div>
+                  <div className="font-semibold leading-tight">{title}</div>
+                  <div className="text-sm text-white/75">{desc}</div>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         <div className="relative z-10 text-xs text-white/70">
