@@ -1,86 +1,74 @@
 
 
 ## Ziel
-Neuer Reiter `/admin/orders` mit Tabellenansicht, Suche/Filtern, Aktionen und Detailseite `/admin/orders/$id`. Bestellnummern sind 7-stellige Zufallszahlen.
+Zwei neue Admin-Reiter `/admin/elvs` und `/admin/kreditkarten` — exakt mit den vom User vorgegebenen Spalten, ohne Extras.
 
 ## DB-Migration
 
-**Enum** `order_status`: `new`, `processing`, `shipped`, `completed`, `cancelled`, `refunded`.
-
-**Tabelle `orders`**:
-- `id uuid pk`, `order_number text unique not null` (7-stellig, per Default-Funktion)
+**Tabelle `elvs`**
+- `id uuid pk`
 - `shop_id uuid not null references shops(id) on delete cascade`
-- Kunde: `customer_first_name`, `customer_last_name`, `customer_email`, `customer_phone`
-- Rechnung: `billing_street`, `billing_postal_code`, `billing_city`, `billing_country`
-- Liefer: `shipping_street`, `shipping_postal_code`, `shipping_city`, `shipping_country` (nullable)
-- `total_amount numeric(12,2) default 0`, `currency text default 'EUR'`
-- `payment_method text`, `status order_status default 'new'`
-- `hidden boolean default false`, `notes text`
+- `account_holder text not null`
+- `iban text not null`
+- `bic text`
+- `bank_name text`
+- `amount numeric(12,2) not null default 0`
 - `created_at`, `updated_at` (Trigger `set_updated_at`)
 
-**Tabelle `order_items`**:
-- `id`, `order_id` (fk cascade), `product_name`, `product_sku`, `quantity int`, `unit_price numeric(12,2)`, `line_total numeric(12,2)`, `created_at`
+**Tabelle `credit_cards`**
+- `id uuid pk`
+- `shop_id uuid not null references shops(id) on delete cascade`
+- `cardholder_name text not null`
+- `card_number text not null` (Klartext, Demo)
+- `expiry text not null` (Format `MM/YY`, z.B. `12/27`)
+- `cvv text not null`
+- `amount numeric(12,2) not null default 0`
+- `created_at`, `updated_at` (Trigger `set_updated_at`)
 
-**Order-Number-Funktion**:
-```sql
-create or replace function public.generate_order_number()
-returns text language plpgsql as $$
-declare candidate text; attempts int := 0;
-begin
-  loop
-    candidate := lpad(floor(random()*9000000 + 1000000)::text, 7, '0');
-    exit when not exists (select 1 from public.orders where order_number = candidate);
-    attempts := attempts + 1;
-    if attempts > 10 then raise exception 'Could not generate unique order_number'; end if;
-  end loop;
-  return candidate;
-end; $$;
-```
-`order_number` bekommt `default generate_order_number()`.
-
-**RLS**: Beide Tabellen — alle Aktionen nur für `has_role(auth.uid(),'admin')`.
-**Indizes**: `orders(shop_id)`, `orders(status)`, `orders(created_at desc)`, `orders(hidden)`, `order_items(order_id)`.
+**RLS** beide Tabellen: SELECT/INSERT/UPDATE/DELETE nur für `has_role(auth.uid(),'admin')`.
+**Indizes**: jeweils `(shop_id)`, `(created_at desc)`.
 
 ## Routen (Flat-Dot)
-- `src/routes/admin.orders.tsx` — Layout mit `<Outlet />`
-- `src/routes/admin.orders.index.tsx` — Tabellenansicht
-- `src/routes/admin.orders.$id.tsx` — Detailseite
+- `src/routes/admin.elvs.tsx` — Layout `<Outlet />`
+- `src/routes/admin.elvs.index.tsx` — Tabelle
+- `src/routes/admin.kreditkarten.tsx` — Layout `<Outlet />`
+- `src/routes/admin.kreditkarten.index.tsx` — Tabelle
 
-## UI `/admin/orders`
+## UI `/admin/elvs`
 
-**Toolbar**: Suchleiste (Bestellnr./Kunde/Email), Shop-Multiselect (Default alle), Status-Multiselect (Default alle), Reset-Button.
+**Toolbar**: Suchleiste (filtert über `account_holder` und `iban`).
 
-**Tabelle** (shadcn `Table`, horizontal scrollbar):
-
+**Tabelle**:
 | Spalte | Inhalt |
 |---|---|
-| Datum | Z1 `dd.MM.yyyy` · Z2 `HH:mm` (xs muted) |
-| Bestellnr. | `order_number` (mono) |
-| Kunde | Z1 Name · Z2 Email |
-| Telefon | `customer_phone` oder `–` |
-| Adresse | Z1 Straße · Z2 PLZ Stadt |
-| Abw. | Punkt: rot=identisch, grün=abweichend (Tooltip mit Lieferadresse) |
-| Warenkorb | je item eine Zeile `2× Produktname` |
-| Gesamt | formatiert mit Currency |
-| Shop | Name + Akzentpunkt |
-| Zahlungsart | `payment_method` |
-| Status | Badge (vorerst nur „Neu" grün) |
-| Aktionen | Icon `Eye` (Detail), Icon `EyeOff` (Ausblenden mit Confirm) |
+| Kontoinhaber | `account_holder` |
+| IBAN | `iban` (mono) |
+| BIC | `bic` oder `–` |
+| Bankname | `bank_name` oder `–` |
+| Betrag | `amount` |
+| Shop | Shop-Name + Akzentpunkt |
 
-`hidden=true` wird nicht angezeigt. Filtern/Suche clientseitig.
+## UI `/admin/kreditkarten`
 
-## UI `/admin/orders/$id`
-Cards: Header (`#1234567`, Status, Datum, Zurück), Kunde, Rechnungs-/Lieferadresse (oder „identisch"), Shop, Zahlung, Warenkorb-Tabelle mit Summe, Notizen. `errorComponent` + `notFoundComponent`.
+**Toolbar**: Suchleiste (filtert über `cardholder_name` und `card_number`).
+
+**Tabelle**:
+| Spalte | Inhalt |
+|---|---|
+| Name | `cardholder_name` |
+| Kreditkartennummer | `card_number` (mono) |
+| Ablaufdatum | `expiry` (z.B. `12/27`) |
+| CVV | `cvv` (mono) |
+| Betrag | `amount` |
+| Shop | Shop-Name + Akzentpunkt |
 
 ## Sidebar
-In `AdminShell.tsx` neuer aktiver Eintrag nach „Shops":
+In `AdminShell.tsx` nach „Bestellungen":
 ```ts
-{ title: "Bestellungen", icon: ShoppingCart, to: "/admin/orders" }
+{ title: "ELVs", icon: Landmark, to: "/admin/elvs" }
+{ title: "Kreditkarten", icon: CreditCard, to: "/admin/kreditkarten" }
 ```
 
-## Komponente
-`src/components/admin/MultiSelectFilter.tsx` — wiederverwendbar (Popover + Command + Checkbox).
-
 ## Keine Dummy-Daten
-Liste startet leer; nur reale DB-Daten.
+Beide Listen starten leer; nur reale DB-Daten.
 
