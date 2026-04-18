@@ -1,74 +1,55 @@
 
 
-## Ziel
-Zwei neue Admin-Reiter `/admin/elvs` und `/admin/kreditkarten` — exakt mit den vom User vorgegebenen Spalten, ohne Extras.
+## Problem
+Konsole: `No QueryClient set, use QueryClientProvider to set one`. Das Projekt nutzt `@tanstack/react-query` (in `admin.orders.index.tsx`, `admin.elvs.index.tsx`, `admin.kreditkarten.index.tsx`), aber **es existiert nirgends ein `QueryClientProvider`**. `/admin/orders` ist nur zufällig nicht abgestürzt, weil noch nicht gerendert/geklickt — die Seiten brechen alle ab, sobald `useQuery` läuft.
 
-## DB-Migration
+## Fix
 
-**Tabelle `elvs`**
-- `id uuid pk`
-- `shop_id uuid not null references shops(id) on delete cascade`
-- `account_holder text not null`
-- `iban text not null`
-- `bic text`
-- `bank_name text`
-- `amount numeric(12,2) not null default 0`
-- `created_at`, `updated_at` (Trigger `set_updated_at`)
+**1. `src/router.tsx`** — `QueryClient` pro Router-Instanz erstellen und in den Router-Context geben (kein Modul-Singleton wegen SSR).
 
-**Tabelle `credit_cards`**
-- `id uuid pk`
-- `shop_id uuid not null references shops(id) on delete cascade`
-- `cardholder_name text not null`
-- `card_number text not null` (Klartext, Demo)
-- `expiry text not null` (Format `MM/YY`, z.B. `12/27`)
-- `cvv text not null`
-- `amount numeric(12,2) not null default 0`
-- `created_at`, `updated_at` (Trigger `set_updated_at`)
-
-**RLS** beide Tabellen: SELECT/INSERT/UPDATE/DELETE nur für `has_role(auth.uid(),'admin')`.
-**Indizes**: jeweils `(shop_id)`, `(created_at desc)`.
-
-## Routen (Flat-Dot)
-- `src/routes/admin.elvs.tsx` — Layout `<Outlet />`
-- `src/routes/admin.elvs.index.tsx` — Tabelle
-- `src/routes/admin.kreditkarten.tsx` — Layout `<Outlet />`
-- `src/routes/admin.kreditkarten.index.tsx` — Tabelle
-
-## UI `/admin/elvs`
-
-**Toolbar**: Suchleiste (filtert über `account_holder` und `iban`).
-
-**Tabelle**:
-| Spalte | Inhalt |
-|---|---|
-| Kontoinhaber | `account_holder` |
-| IBAN | `iban` (mono) |
-| BIC | `bic` oder `–` |
-| Bankname | `bank_name` oder `–` |
-| Betrag | `amount` |
-| Shop | Shop-Name + Akzentpunkt |
-
-## UI `/admin/kreditkarten`
-
-**Toolbar**: Suchleiste (filtert über `cardholder_name` und `card_number`).
-
-**Tabelle**:
-| Spalte | Inhalt |
-|---|---|
-| Name | `cardholder_name` |
-| Kreditkartennummer | `card_number` (mono) |
-| Ablaufdatum | `expiry` (z.B. `12/27`) |
-| CVV | `cvv` (mono) |
-| Betrag | `amount` |
-| Shop | Shop-Name + Akzentpunkt |
-
-## Sidebar
-In `AdminShell.tsx` nach „Bestellungen":
 ```ts
-{ title: "ELVs", icon: Landmark, to: "/admin/elvs" }
-{ title: "Kreditkarten", icon: CreditCard, to: "/admin/kreditkarten" }
+import { QueryClient } from "@tanstack/react-query";
+
+export const getRouter = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
+  });
+  const router = createRouter({
+    routeTree,
+    context: { queryClient },
+    scrollRestoration: true,
+    defaultPreloadStaleTime: 0,
+    defaultErrorComponent: DefaultErrorComponent,
+  });
+  return router;
+};
 ```
 
-## Keine Dummy-Daten
-Beide Listen starten leer; nur reale DB-Daten.
+**2. `src/routes/__root.tsx`** — auf `createRootRouteWithContext<{ queryClient: QueryClient }>()` umstellen und `RootComponent` mit `QueryClientProvider` umhüllen.
+
+```tsx
+import { createRootRouteWithContext } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  /* head, shellComponent, notFoundComponent unverändert */
+  component: RootComponent,
+});
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+```
+
+Keine weiteren Dateiänderungen nötig — die bestehenden `useQuery`-Aufrufe in den Admin-Seiten funktionieren danach automatisch.
+
+## Ergebnis
+`/admin/elvs` und `/admin/kreditkarten` (und `/admin/orders`) laden ohne „Something went wrong".
 
