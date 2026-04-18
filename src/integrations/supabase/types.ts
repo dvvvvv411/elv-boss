@@ -14,6 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          line_total: number
+          order_id: string
+          product_name: string
+          product_sku: string | null
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_total?: number
+          order_id: string
+          product_name: string
+          product_sku?: string | null
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_total?: number
+          order_id?: string
+          product_name?: string
+          product_sku?: string | null
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          billing_city: string
+          billing_country: string
+          billing_postal_code: string
+          billing_street: string
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_first_name: string
+          customer_last_name: string
+          customer_phone: string | null
+          hidden: boolean
+          id: string
+          notes: string | null
+          order_number: string
+          payment_method: string | null
+          shipping_city: string | null
+          shipping_country: string | null
+          shipping_postal_code: string | null
+          shipping_street: string | null
+          shop_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          billing_city: string
+          billing_country?: string
+          billing_postal_code: string
+          billing_street: string
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_first_name: string
+          customer_last_name: string
+          customer_phone?: string | null
+          hidden?: boolean
+          id?: string
+          notes?: string | null
+          order_number?: string
+          payment_method?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_postal_code?: string | null
+          shipping_street?: string | null
+          shop_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_city?: string
+          billing_country?: string
+          billing_postal_code?: string
+          billing_street?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_first_name?: string
+          customer_last_name?: string
+          customer_phone?: string | null
+          hidden?: boolean
+          id?: string
+          notes?: string | null
+          order_number?: string
+          payment_method?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_postal_code?: string | null
+          shipping_street?: string | null
+          shop_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -145,6 +272,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_order_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -155,6 +283,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin"
+      order_status:
+        | "new"
+        | "processing"
+        | "shipped"
+        | "completed"
+        | "cancelled"
+        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -283,6 +418,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin"],
+      order_status: [
+        "new",
+        "processing",
+        "shipped",
+        "completed",
+        "cancelled",
+        "refunded",
+      ],
     },
   },
 } as const
