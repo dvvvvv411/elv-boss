@@ -157,7 +157,7 @@ export function ShopForm({
             onChange={(e) => update("email", e.target.value)}
           />
         </Field>
-        <Field label="Telefon">
+        <Field label="Telefon (optional)">
           <Input value={values.phone} onChange={(e) => update("phone", e.target.value)} />
         </Field>
         <Field label="Website" className="md:col-span-2">
@@ -245,8 +245,8 @@ export function ShopForm({
         </Field>
       </Section>
 
-      <Section title="E-Mail Konfiguration">
-        <Field label="Resend API Key" className="md:col-span-2">
+      <Section title="E-Mail Konfiguration (optional)">
+        <Field label="Resend API Key (optional)" className="md:col-span-2">
           <Input
             type="password"
             placeholder="re_..."
@@ -254,14 +254,14 @@ export function ShopForm({
             onChange={(e) => update("resend_api_key", e.target.value)}
           />
         </Field>
-        <Field label="Absender E-Mail">
+        <Field label="Absender E-Mail (optional)">
           <Input
             type="email"
             value={values.sender_email}
             onChange={(e) => update("sender_email", e.target.value)}
           />
         </Field>
-        <Field label="Absender Name">
+        <Field label="Absender Name (optional)">
           <Input
             value={values.sender_name}
             onChange={(e) => update("sender_name", e.target.value)}
@@ -269,8 +269,8 @@ export function ShopForm({
         </Field>
       </Section>
 
-      <Section title="SMS Konfiguration (seven.io)">
-        <Field label="SMS Absendername" className="md:col-span-2">
+      <Section title="SMS Konfiguration (optional)">
+        <Field label="SMS Absendername (optional)" className="md:col-span-2">
           <Input
             value={values.sms_sender_name}
             onChange={(e) => update("sms_sender_name", e.target.value)}
