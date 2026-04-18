@@ -8,7 +8,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const BRAND = "#2ed573";
 
@@ -48,6 +47,7 @@ const trustItems = [
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [mode, setMode] = useState<"login" | "register">("login");
 
   useEffect(() => {
     if (!loading && user) {
@@ -60,75 +60,88 @@ function AuthPage() {
       <Toaster richColors position="top-center" />
 
       {/* LEFT: Brand panel */}
-      <section
-        className="relative overflow-hidden flex flex-col justify-between p-8 lg:p-12 text-white"
+      <aside
+        className="relative flex flex-col justify-between p-8 lg:p-12 text-white min-h-[40vh] lg:min-h-screen"
         style={{ background: BRAND }}
       >
-        {/* Decorative orbs */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full opacity-30 blur-3xl"
-          style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 -right-40 h-[460px] w-[460px] rounded-full opacity-20 blur-3xl"
-          style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }}
-        />
-
-        <div className="relative z-10 flex items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium">
+        <div className="relative z-10">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium"
+          >
             <ArrowLeft className="h-4 w-4" /> Zurück
           </Link>
         </div>
 
-        <div className="relative z-10 my-10 lg:my-0 max-w-lg">
-          <h1 className="text-5xl lg:text-7xl font-bold tracking-[0.06em]">ELV BOSS</h1>
-          <p className="mt-3 text-sm lg:text-base font-medium uppercase tracking-[0.35em] text-white/80">
+        <div className="relative z-10 max-w-md">
+          <h1 className="text-5xl lg:text-6xl font-bold tracking-[0.06em]">ELV BOSS</h1>
+          <p className="mt-3 text-xs lg:text-sm font-medium uppercase tracking-[0.35em] text-white/85">
             Die Gelddruckmaschine
           </p>
 
-          <ul className="mt-12 flex flex-col gap-5">
+          <ul className="mt-10 flex flex-col gap-5">
             {trustItems.map(({ icon: Icon, title, desc }) => (
               <li key={title} className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/15">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="font-semibold leading-tight">{title}</div>
-                  <div className="text-sm text-white/75">{desc}</div>
+                  <div className="text-sm text-white/80">{desc}</div>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="relative z-10 text-xs text-white/70">
+        <div className="relative z-10 text-xs text-white/70 mt-8">
           © {new Date().getFullYear()} ELV BOSS · Alle Rechte vorbehalten
         </div>
-      </section>
+      </aside>
 
-      {/* RIGHT: Form panel */}
-      <section className="flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md">
-          <h2 className="text-3xl font-bold text-slate-900">Willkommen</h2>
+      {/* RIGHT: Auth panel */}
+      <section className="flex items-center justify-center p-6 sm:p-10 lg:p-12">
+        <div className="w-full max-w-sm">
+          <h2 className="text-3xl font-bold text-slate-900">
+            {mode === "login" ? "Willkommen zurück" : "Account erstellen"}
+          </h2>
           <p className="mt-2 text-sm text-slate-500">
-            Logge dich ein oder erstelle einen Account, um loszulegen.
+            {mode === "login"
+              ? "Logge dich ein, um zu deinem Dashboard zu gelangen."
+              : "Erstelle deinen Account und leg sofort los."}
           </p>
 
-          <Tabs defaultValue="login" className="mt-8">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Registrieren</TabsTrigger>
-            </TabsList>
+          <div className="mt-8">
+            {mode === "login" ? <LoginForm /> : <RegisterForm />}
+          </div>
 
-            <TabsContent value="login" className="mt-6">
-              <LoginForm />
-            </TabsContent>
-            <TabsContent value="register" className="mt-6">
-              <RegisterForm />
-            </TabsContent>
-          </Tabs>
+          <p className="mt-6 text-sm text-slate-500 text-center">
+            {mode === "login" ? (
+              <>
+                Noch keinen Account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode("register")}
+                  className="font-semibold hover:underline"
+                  style={{ color: BRAND }}
+                >
+                  Jetzt registrieren
+                </button>
+              </>
+            ) : (
+              <>
+                Schon dabei?{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className="font-semibold hover:underline"
+                  style={{ color: BRAND }}
+                >
+                  Einloggen
+                </button>
+              </>
+            )}
+          </p>
         </div>
       </section>
     </main>
