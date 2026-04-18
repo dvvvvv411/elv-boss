@@ -144,8 +144,8 @@ function AuthPage() {
           </p>
         </div>
       </section>
-    </main>
-    </>
+      </main>
+    </div>
   );
 }
 
