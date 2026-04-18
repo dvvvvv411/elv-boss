@@ -1,74 +1,14 @@
 
-Ziel: `/auth` komplett neu als sauberes, stabiles 1/2-Layout aufbauen — optisch angelehnt an die offizielle Lovable-Loginseite, aber mit deiner gewünschten Anordnung: links Branding/Trust auf Grün, rechts Login/Register auf Weiß.
+Fix: Login-Form soll vertikal mittig in der rechten Hälfte sitzen.
 
-1. Neuaufbau statt Flickwerk
-- `src/routes/auth.tsx` vollständig neu strukturieren
-- bestehende Auth-Logik behalten: `useAuth`, Redirect nach `/admin`, `signInWithPassword`, `signUp`, Toasts, Validierung
-- Fokus nur auf Layout und UI-Struktur, damit keine alten Styling-Konflikte mitgeschleppt werden
+Aktuell nutzt die rechte `<section>` zwar `flex items-center justify-center`, aber die linke `<aside>` mit `min-h-screen` und `justify-between` (Header/Body/Footer) zwingt das Grid auf volle Höhe — die rechte Section sollte also eigentlich mittig sein. Wenn sie es nicht ist, liegt es daran, dass die Section selbst keine `min-h-screen` hat und im Grid die Höhe der `aside` erbt — das Form sitzt aber oben, weil der Inhalt kürzer ist als die Spalte.
 
-2. Layout-Prinzip
-- outer wrapper bleibt ein echtes `grid grid-cols-1 lg:grid-cols-2`
-- Desktop: exakt 50/50, volle Höhe
-- linke Hälfte = grünes Branding-Panel
-- rechte Hälfte = weißes Auth-Panel
-- keine inneren Layouts, die wieder wie 4 Teilflächen wirken
+Wahrscheinlichere Ursache: die `<section>` hat zwar `flex items-center justify-center`, aber durch das Grid mit `lg:grid-cols-2` streckt sie sich automatisch auf die Höhe der `aside`. Sollte mittig sein. Der User sieht es aber nicht mittig → vermutlich rendert auf 1143px Viewport noch das Mobile-Stacking (lg = 1024px, also greift lg:grid-cols-2). Form müsste mittig sein.
 
-3. Linke Hälfte neu
-- Vollfläche mit `#2ed573`
-- ruhiger Aufbau in einer einzigen vertikalen Spalte
-- oben nur kleiner Zurück-Link
-- mittig:
-  - „ELV BOSS“
-  - Unterzeile „Die Gelddruckmaschine“
-- darunter 3–4 Trust-Elemente als einfache vertikale Liste
-- keine Karten-Grid-Struktur, keine harten Borders, keine extra Panels
-- optional sehr subtile Hintergrund-Glows, aber nur dekorativ und ohne Segmentierung
+Fix-Ansatz: explizit `min-h-screen` auf die `<section>` setzen, damit auf jeden Fall vertikal zentriert wird, unabhängig vom Grid-Stretching.
 
-4. Rechte Hälfte neu
-- ein einziger zentrierter Auth-Container mit klarer Max-Breite
-- visuell an der offiziellen Lovable-Seite orientiert:
-  - klare Headline
-  - kurze Beschreibung
-  - kompakter Umschalter für Login / Registrieren
-  - darunter jeweils genau ein Formularblock
-- Inputs und Button full width
-- saubere Abstände, keine zusätzlichen Untercontainer, die wie eigene Bereiche aussehen
+Änderung in `src/routes/auth.tsx`:
+- rechte `<section>`: `min-h-screen` ergänzen
+- damit ist `flex items-center justify-center` garantiert wirksam und das Form sitzt sowohl horizontal als auch vertikal exakt mittig in der rechten Hälfte
 
-5. Tabs/Form-Verhalten
-- `Tabs` weiterverwenden, aber im Auth-Container bewusst schlicht einsetzen
-- falls die vorhandenen Tabs zu „kastig“ wirken, nur leichte Stilkorrektur in `src/components/ui/tabs.tsx`
-- Formulare bleiben funktional unverändert, nur visuell sauberer gruppiert
-
-6. Responsive Verhalten
-- Mobile: zuerst kompakter grüner Brand-Bereich, direkt darunter das Formular
-- Trust-Liste auf Mobile kürzer/kompakter, damit der Login schnell sichtbar ist
-- keine Zwischenzustände mit versetzten Quadranten oder merkwürdiger Schwerpunktverteilung
-
-7. Orientierung an der offiziellen Lovable-Loginseite
-- übernehmen:
-  - klare 2-Spalten-Logik
-  - ruhige Flächen
-  - ein zentraler Formularbereich
-  - minimale visuelle Komplexität
-- nicht übernehmen:
-  - Seitenvertauschung
-  - Lovable-Farben/Branding
-- stattdessen:
-  - Lovable-Strukturprinzip rechts/links sauber adaptiert
-  - dein ELV-BOSS-Branding links in Grün
-
-Technische Umsetzung
-- Datei: `src/routes/auth.tsx`
-  - Page-Layout komplett vereinfachen
-  - linke Spalte auf `flex flex-col`
-  - Trust-Items als einfache Liste rendern
-  - rechte Spalte mit genau einem `max-w` Auth-Container
-- optional: `src/components/ui/tabs.tsx`
-  - nur kleine optische Entschlackung, falls nötig
-- keine Änderungen an Supabase-Client, `useAuth`, Redirect-Logik oder Formularvalidierung
-
-Ergebnis nach Umsetzung
-- links genau ein grünes Panel mit Branding + Trust
-- rechts genau ein weißes Panel mit Login/Register
-- keine 4-Bereiche-Optik mehr
-- optisch klarer, stabiler und näher an der offiziellen Lovable-Loginstruktur
+Keine weiteren Änderungen. Auth-Logik, Branding-Panel und Responsive-Verhalten bleiben unangetastet.
