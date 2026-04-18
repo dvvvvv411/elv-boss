@@ -11,6 +11,7 @@ import {
   Bell,
   LogOut,
   Store,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -37,6 +38,7 @@ const BRAND = "#2ed573";
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, to: "/admin" as const },
   { title: "Shops", icon: Store, to: "/admin/shops" as const },
+  { title: "Bestellungen", icon: ShoppingCart, to: "/admin/orders" as const },
   { title: "Einnahmen", icon: Wallet, to: "/admin" as const, disabled: true },
   { title: "Mitglieder", icon: Users, to: "/admin" as const, disabled: true },
   { title: "Auszahlungen", icon: ArrowDownToLine, to: "/admin" as const, disabled: true },
