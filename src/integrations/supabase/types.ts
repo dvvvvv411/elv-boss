@@ -14,6 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_cards: {
+        Row: {
+          amount: number
+          card_number: string
+          cardholder_name: string
+          created_at: string
+          cvv: string
+          expiry: string
+          id: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          card_number: string
+          cardholder_name: string
+          created_at?: string
+          cvv: string
+          expiry: string
+          id?: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          card_number?: string
+          cardholder_name?: string
+          created_at?: string
+          cvv?: string
+          expiry?: string
+          id?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_cards_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      elvs: {
+        Row: {
+          account_holder: string
+          amount: number
+          bank_name: string | null
+          bic: string | null
+          created_at: string
+          iban: string
+          id: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_holder: string
+          amount?: number
+          bank_name?: string | null
+          bic?: string | null
+          created_at?: string
+          iban: string
+          id?: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_holder?: string
+          amount?: number
+          bank_name?: string | null
+          bic?: string | null
+          created_at?: string
+          iban?: string
+          id?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elvs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
