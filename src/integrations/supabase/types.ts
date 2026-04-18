@@ -32,6 +32,93 @@ export type Database = {
         }
         Relationships: []
       }
+      shops: {
+        Row: {
+          accent_color: string
+          address: string | null
+          business_owner: string | null
+          city: string | null
+          commercial_register_number: string | null
+          company_name: string
+          country: string
+          court: string | null
+          created_at: string
+          currency: string
+          email: string
+          id: string
+          language: string
+          logo_url: string | null
+          owner_id: string
+          phone: string | null
+          postal_code: string | null
+          resend_api_key: string | null
+          sender_email: string | null
+          sender_name: string | null
+          shop_name: string
+          sms_sender_name: string | null
+          updated_at: string
+          vat_id: string | null
+          vat_rate: number
+          website: string | null
+        }
+        Insert: {
+          accent_color?: string
+          address?: string | null
+          business_owner?: string | null
+          city?: string | null
+          commercial_register_number?: string | null
+          company_name: string
+          country?: string
+          court?: string | null
+          created_at?: string
+          currency?: string
+          email: string
+          id?: string
+          language?: string
+          logo_url?: string | null
+          owner_id: string
+          phone?: string | null
+          postal_code?: string | null
+          resend_api_key?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          shop_name: string
+          sms_sender_name?: string | null
+          updated_at?: string
+          vat_id?: string | null
+          vat_rate?: number
+          website?: string | null
+        }
+        Update: {
+          accent_color?: string
+          address?: string | null
+          business_owner?: string | null
+          city?: string | null
+          commercial_register_number?: string | null
+          company_name?: string
+          country?: string
+          court?: string | null
+          created_at?: string
+          currency?: string
+          email?: string
+          id?: string
+          language?: string
+          logo_url?: string | null
+          owner_id?: string
+          phone?: string | null
+          postal_code?: string | null
+          resend_api_key?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          shop_name?: string
+          sms_sender_name?: string | null
+          updated_at?: string
+          vat_id?: string | null
+          vat_rate?: number
+          website?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
