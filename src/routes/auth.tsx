@@ -100,7 +100,7 @@ function AuthPage() {
       </aside>
 
       {/* RIGHT: Auth panel */}
-      <section className="flex items-center justify-center p-6 sm:p-10 lg:p-12">
+      <section className="min-h-screen flex items-center justify-center p-6 sm:p-10 lg:p-12">
         <div className="w-full max-w-sm">
           <h2 className="text-3xl font-bold text-slate-900">
             {mode === "login" ? "Willkommen zurück" : "Account erstellen"}
