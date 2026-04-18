@@ -15,8 +15,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminShopsRouteImport } from './routes/admin.shops'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
+import { Route as AdminKreditkartenRouteImport } from './routes/admin.kreditkarten'
+import { Route as AdminElvsRouteImport } from './routes/admin.elvs'
 import { Route as AdminShopsIndexRouteImport } from './routes/admin.shops.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
+import { Route as AdminKreditkartenIndexRouteImport } from './routes/admin.kreditkarten.index'
+import { Route as AdminElvsIndexRouteImport } from './routes/admin.elvs.index'
 import { Route as AdminShopsNewRouteImport } from './routes/admin.shops.new'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminShopsIdEditRouteImport } from './routes/admin.shops.$id.edit'
@@ -51,6 +55,16 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminKreditkartenRoute = AdminKreditkartenRouteImport.update({
+  id: '/kreditkarten',
+  path: '/kreditkarten',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminElvsRoute = AdminElvsRouteImport.update({
+  id: '/elvs',
+  path: '/elvs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminShopsIndexRoute = AdminShopsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -60,6 +74,16 @@ const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminOrdersRoute,
+} as any)
+const AdminKreditkartenIndexRoute = AdminKreditkartenIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminKreditkartenRoute,
+} as any)
+const AdminElvsIndexRoute = AdminElvsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminElvsRoute,
 } as any)
 const AdminShopsNewRoute = AdminShopsNewRouteImport.update({
   id: '/new',
@@ -81,11 +105,15 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/admin/elvs': typeof AdminElvsRouteWithChildren
+  '/admin/kreditkarten': typeof AdminKreditkartenRouteWithChildren
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/shops': typeof AdminShopsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
+  '/admin/elvs/': typeof AdminElvsIndexRoute
+  '/admin/kreditkarten/': typeof AdminKreditkartenIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/shops/': typeof AdminShopsIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
@@ -96,6 +124,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
+  '/admin/elvs': typeof AdminElvsIndexRoute
+  '/admin/kreditkarten': typeof AdminKreditkartenIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/shops': typeof AdminShopsIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
@@ -105,11 +135,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/admin/elvs': typeof AdminElvsRouteWithChildren
+  '/admin/kreditkarten': typeof AdminKreditkartenRouteWithChildren
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/shops': typeof AdminShopsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
+  '/admin/elvs/': typeof AdminElvsIndexRoute
+  '/admin/kreditkarten/': typeof AdminKreditkartenIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/shops/': typeof AdminShopsIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
@@ -120,11 +154,15 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/admin/elvs'
+    | '/admin/kreditkarten'
     | '/admin/orders'
     | '/admin/shops'
     | '/admin/'
     | '/admin/orders/$id'
     | '/admin/shops/new'
+    | '/admin/elvs/'
+    | '/admin/kreditkarten/'
     | '/admin/orders/'
     | '/admin/shops/'
     | '/admin/shops/$id/edit'
@@ -135,6 +173,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/orders/$id'
     | '/admin/shops/new'
+    | '/admin/elvs'
+    | '/admin/kreditkarten'
     | '/admin/orders'
     | '/admin/shops'
     | '/admin/shops/$id/edit'
@@ -143,11 +183,15 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/admin/elvs'
+    | '/admin/kreditkarten'
     | '/admin/orders'
     | '/admin/shops'
     | '/admin/'
     | '/admin/orders/$id'
     | '/admin/shops/new'
+    | '/admin/elvs/'
+    | '/admin/kreditkarten/'
     | '/admin/orders/'
     | '/admin/shops/'
     | '/admin/shops/$id/edit'
@@ -203,6 +247,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/kreditkarten': {
+      id: '/admin/kreditkarten'
+      path: '/kreditkarten'
+      fullPath: '/admin/kreditkarten'
+      preLoaderRoute: typeof AdminKreditkartenRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/elvs': {
+      id: '/admin/elvs'
+      path: '/elvs'
+      fullPath: '/admin/elvs'
+      preLoaderRoute: typeof AdminElvsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/shops/': {
       id: '/admin/shops/'
       path: '/'
@@ -216,6 +274,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/orders/'
       preLoaderRoute: typeof AdminOrdersIndexRouteImport
       parentRoute: typeof AdminOrdersRoute
+    }
+    '/admin/kreditkarten/': {
+      id: '/admin/kreditkarten/'
+      path: '/'
+      fullPath: '/admin/kreditkarten/'
+      preLoaderRoute: typeof AdminKreditkartenIndexRouteImport
+      parentRoute: typeof AdminKreditkartenRoute
+    }
+    '/admin/elvs/': {
+      id: '/admin/elvs/'
+      path: '/'
+      fullPath: '/admin/elvs/'
+      preLoaderRoute: typeof AdminElvsIndexRouteImport
+      parentRoute: typeof AdminElvsRoute
     }
     '/admin/shops/new': {
       id: '/admin/shops/new'
@@ -240,6 +312,29 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminElvsRouteChildren {
+  AdminElvsIndexRoute: typeof AdminElvsIndexRoute
+}
+
+const AdminElvsRouteChildren: AdminElvsRouteChildren = {
+  AdminElvsIndexRoute: AdminElvsIndexRoute,
+}
+
+const AdminElvsRouteWithChildren = AdminElvsRoute._addFileChildren(
+  AdminElvsRouteChildren,
+)
+
+interface AdminKreditkartenRouteChildren {
+  AdminKreditkartenIndexRoute: typeof AdminKreditkartenIndexRoute
+}
+
+const AdminKreditkartenRouteChildren: AdminKreditkartenRouteChildren = {
+  AdminKreditkartenIndexRoute: AdminKreditkartenIndexRoute,
+}
+
+const AdminKreditkartenRouteWithChildren =
+  AdminKreditkartenRoute._addFileChildren(AdminKreditkartenRouteChildren)
 
 interface AdminOrdersRouteChildren {
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
@@ -272,12 +367,16 @@ const AdminShopsRouteWithChildren = AdminShopsRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminElvsRoute: typeof AdminElvsRouteWithChildren
+  AdminKreditkartenRoute: typeof AdminKreditkartenRouteWithChildren
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminShopsRoute: typeof AdminShopsRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminElvsRoute: AdminElvsRouteWithChildren,
+  AdminKreditkartenRoute: AdminKreditkartenRouteWithChildren,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminShopsRoute: AdminShopsRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
@@ -293,3 +392,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
