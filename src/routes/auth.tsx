@@ -56,10 +56,10 @@ function AuthPage() {
   }, [user, loading, navigate]);
 
   return (
-    <>
-    <Toaster richColors position="top-center" />
-    <main className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white">
-      {/* LEFT: Brand panel */}
+    <div className="relative">
+      <Toaster richColors position="top-center" />
+      <main className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white">
+        {/* LEFT: Brand panel */}
       <aside
         className="relative flex flex-col justify-between p-8 lg:p-12 text-white min-h-[40vh] lg:min-h-screen"
         style={{ background: BRAND }}
