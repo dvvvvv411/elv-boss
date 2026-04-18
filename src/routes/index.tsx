@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -90,6 +90,25 @@ function Index() {
         >
           Die Gelddruckmaschine
         </p>
+
+        {/* CTA Button */}
+        <Link
+          to="/auth"
+          className="mt-10 inline-flex items-center justify-center rounded-full px-10 py-4 text-base font-bold tracking-[0.2em] text-white opacity-0 animate-tagline-in transition-all duration-300 hover:scale-105"
+          style={{
+            background: BRAND,
+            animationDelay: `${letters.length * 80 + 700}ms`,
+            boxShadow: `0 10px 30px -10px ${BRAND}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = `0 15px 40px -8px ${BRAND}`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = `0 10px 30px -10px ${BRAND}`;
+          }}
+        >
+          LETS GO
+        </Link>
       </div>
     </main>
   );
