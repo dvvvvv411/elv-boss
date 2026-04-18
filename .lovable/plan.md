@@ -1,51 +1,74 @@
 
-Ziel: Die `/auth` Seite auf ein echtes, klares 1/2-Layout zurückbauen. Der aktuelle Eindruck von „4 Bereichen“ kommt nicht vom Outer-Layout, sondern von den inneren Grids/Karten, die die linke Hälfte optisch zerschneiden.
+Ziel: `/auth` komplett neu als sauberes, stabiles 1/2-Layout aufbauen — optisch angelehnt an die offizielle Lovable-Loginseite, aber mit deiner gewünschten Anordnung: links Branding/Trust auf Grün, rechts Login/Register auf Weiß.
 
-1. Ursache beheben
-- `src/routes/auth.tsx` prüfen und die linke Hälfte vereinfachen:
-  - aktuelles Outer-Layout `lg:grid-cols-2` beibehalten
-  - innerhalb der linken Hälfte das Trust-Grid `sm:grid-cols-2` entfernen
-  - statt 4 Karten in Rasterform: eine vertikale, ruhige Liste oder 2-3 kompakte Trust-Elemente untereinander
-- rechte Hälfte klar als ein zusammenhängender Login/Register-Bereich gestalten, nicht wie mehrere Blöcke
+1. Neuaufbau statt Flickwerk
+- `src/routes/auth.tsx` vollständig neu strukturieren
+- bestehende Auth-Logik behalten: `useAuth`, Redirect nach `/admin`, `signInWithPassword`, `signUp`, Toasts, Validierung
+- Fokus nur auf Layout und UI-Struktur, damit keine alten Styling-Konflikte mitgeschleppt werden
 
-2. Linke Hälfte neu strukturieren
-- Vollflächiger grüner Bereich `#2ed573`
-- oben optional nur kleiner Zurück-Link
-- mittig: großes „ELV BOSS“, Unterzeile „Die Gelddruckmaschine“
-- darunter: Trust-/Money-Elemente als einspaltige Liste, damit die linke Seite wie eine einzige Fläche wirkt
-- weniger Boxen, weniger Borders, weniger Segmentierung
+2. Layout-Prinzip
+- outer wrapper bleibt ein echtes `grid grid-cols-1 lg:grid-cols-2`
+- Desktop: exakt 50/50, volle Höhe
+- linke Hälfte = grünes Branding-Panel
+- rechte Hälfte = weißes Auth-Panel
+- keine inneren Layouts, die wieder wie 4 Teilflächen wirken
 
-3. Rechte Hälfte neu strukturieren
-- weiße Hälfte mit einem einzigen zentrierten Auth-Container
-- Headline + kurze Beschreibung
-- Tabs nur als Umschalter, aber restlich alles in einem sauberen Block
-- Inputs und Button full width, klare Abstände
-- visuell keine Unterteilung in zusätzliche „Panels“
+3. Linke Hälfte neu
+- Vollfläche mit `#2ed573`
+- ruhiger Aufbau in einer einzigen vertikalen Spalte
+- oben nur kleiner Zurück-Link
+- mittig:
+  - „ELV BOSS“
+  - Unterzeile „Die Gelddruckmaschine“
+- darunter 3–4 Trust-Elemente als einfache vertikale Liste
+- keine Karten-Grid-Struktur, keine harten Borders, keine extra Panels
+- optional sehr subtile Hintergrund-Glows, aber nur dekorativ und ohne Segmentierung
 
-4. Responsive Verhalten schärfen
-- Desktop: strikt 50/50
-- Mobile: erst Brand-Bereich kompakt oben, dann Form darunter
-- keine Zwischenzustände, die wie mehrere Spalten oder Quadranten wirken
+4. Rechte Hälfte neu
+- ein einziger zentrierter Auth-Container mit klarer Max-Breite
+- visuell an der offiziellen Lovable-Seite orientiert:
+  - klare Headline
+  - kurze Beschreibung
+  - kompakter Umschalter für Login / Registrieren
+  - darunter jeweils genau ein Formularblock
+- Inputs und Button full width
+- saubere Abstände, keine zusätzlichen Untercontainer, die wie eigene Bereiche aussehen
 
-5. Technische Änderungen
-- `src/routes/auth.tsx`:
-  - linkes internes `grid` entfernen bzw. auf `flex flex-col` umstellen
-  - Trust-Elemente auf vertikale Liste umbauen
-  - Spacing und max widths so anpassen, dass jede Hälfte als eine Fläche gelesen wird
-- optional kleine Stilkorrekturen an `src/components/ui/tabs.tsx` nur wenn die Tabs selbst zu „kastig“ wirken; sonst unverändert lassen
+5. Tabs/Form-Verhalten
+- `Tabs` weiterverwenden, aber im Auth-Container bewusst schlicht einsetzen
+- falls die vorhandenen Tabs zu „kastig“ wirken, nur leichte Stilkorrektur in `src/components/ui/tabs.tsx`
+- Formulare bleiben funktional unverändert, nur visuell sauberer gruppiert
 
-6. Ergebnis nach Umsetzung
-- links exakt ein grünes Branding-Panel
-- rechts exakt ein weißes Auth-Panel
-- kein Eindruck mehr von 4 Teilflächen
-- weiterhin Login/Register, Redirects und Supabase-Logik unverändert
+6. Responsive Verhalten
+- Mobile: zuerst kompakter grüner Brand-Bereich, direkt darunter das Formular
+- Trust-Liste auf Mobile kürzer/kompakter, damit der Login schnell sichtbar ist
+- keine Zwischenzustände mit versetzten Quadranten oder merkwürdiger Schwerpunktverteilung
 
-Technische Details
-- Ursache im aktuellen Code:
-  - Outer-Layout: `grid grid-cols-1 lg:grid-cols-2` ist korrekt
-  - Problemstelle: `trustItems` wird in `className="mt-10 grid grid-cols-1 sm:grid-cols-2 ..."` gerendert
-  - dadurch entstehen links 4 stark getrennte Karten
-- Fix:
-  - `sm:grid-cols-2` entfernen
-  - Kartenstil deutlich reduzieren oder durch einfache Zeilenliste ersetzen
-  - rechte Seite als ein einziger Card-/Container-Bereich mit klarer Mitte aufbauen
+7. Orientierung an der offiziellen Lovable-Loginseite
+- übernehmen:
+  - klare 2-Spalten-Logik
+  - ruhige Flächen
+  - ein zentraler Formularbereich
+  - minimale visuelle Komplexität
+- nicht übernehmen:
+  - Seitenvertauschung
+  - Lovable-Farben/Branding
+- stattdessen:
+  - Lovable-Strukturprinzip rechts/links sauber adaptiert
+  - dein ELV-BOSS-Branding links in Grün
+
+Technische Umsetzung
+- Datei: `src/routes/auth.tsx`
+  - Page-Layout komplett vereinfachen
+  - linke Spalte auf `flex flex-col`
+  - Trust-Items als einfache Liste rendern
+  - rechte Spalte mit genau einem `max-w` Auth-Container
+- optional: `src/components/ui/tabs.tsx`
+  - nur kleine optische Entschlackung, falls nötig
+- keine Änderungen an Supabase-Client, `useAuth`, Redirect-Logik oder Formularvalidierung
+
+Ergebnis nach Umsetzung
+- links genau ein grünes Panel mit Branding + Trust
+- rechts genau ein weißes Panel mit Login/Register
+- keine 4-Bereiche-Optik mehr
+- optisch klarer, stabiler und näher an der offiziellen Lovable-Loginstruktur
