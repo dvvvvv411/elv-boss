@@ -2,10 +2,6 @@ import { type ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
-  Wallet,
-  Users,
-  ArrowDownToLine,
-  BarChart3,
   Settings,
   Search,
   Bell,
