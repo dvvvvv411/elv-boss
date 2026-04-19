@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminShopsRouteImport } from './routes/admin.shops'
+import { Route as AdminPreviewRouteImport } from './routes/admin.preview'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminKreditkartenRouteImport } from './routes/admin.kreditkarten'
 import { Route as AdminElvsRouteImport } from './routes/admin.elvs'
@@ -48,6 +49,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminShopsRoute = AdminShopsRouteImport.update({
   id: '/shops',
   path: '/shops',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPreviewRoute = AdminPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/admin/elvs': typeof AdminElvsRouteWithChildren
   '/admin/kreditkarten': typeof AdminKreditkartenRouteWithChildren
   '/admin/orders': typeof AdminOrdersRouteWithChildren
+  '/admin/preview': typeof AdminPreviewRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin/preview': typeof AdminPreviewRoute
   '/admin': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/admin/elvs': typeof AdminElvsRouteWithChildren
   '/admin/kreditkarten': typeof AdminKreditkartenRouteWithChildren
   '/admin/orders': typeof AdminOrdersRouteWithChildren
+  '/admin/preview': typeof AdminPreviewRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin/elvs'
     | '/admin/kreditkarten'
     | '/admin/orders'
+    | '/admin/preview'
     | '/admin/shops'
     | '/admin/'
     | '/admin/orders/$id'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/admin/preview'
     | '/admin'
     | '/admin/orders/$id'
     | '/admin/shops/new'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/admin/elvs'
     | '/admin/kreditkarten'
     | '/admin/orders'
+    | '/admin/preview'
     | '/admin/shops'
     | '/admin/'
     | '/admin/orders/$id'
@@ -238,6 +250,13 @@ declare module '@tanstack/react-router' {
       path: '/shops'
       fullPath: '/admin/shops'
       preLoaderRoute: typeof AdminShopsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/preview': {
+      id: '/admin/preview'
+      path: '/preview'
+      fullPath: '/admin/preview'
+      preLoaderRoute: typeof AdminPreviewRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/orders': {
@@ -370,6 +389,7 @@ interface AdminRouteChildren {
   AdminElvsRoute: typeof AdminElvsRouteWithChildren
   AdminKreditkartenRoute: typeof AdminKreditkartenRouteWithChildren
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
+  AdminPreviewRoute: typeof AdminPreviewRoute
   AdminShopsRoute: typeof AdminShopsRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -378,6 +398,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminElvsRoute: AdminElvsRouteWithChildren,
   AdminKreditkartenRoute: AdminKreditkartenRouteWithChildren,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
+  AdminPreviewRoute: AdminPreviewRoute,
   AdminShopsRoute: AdminShopsRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -392,12 +413,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
