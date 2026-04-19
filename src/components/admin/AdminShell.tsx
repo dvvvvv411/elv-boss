@@ -2,10 +2,6 @@ import { type ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
-  Wallet,
-  Users,
-  ArrowDownToLine,
-  BarChart3,
   Settings,
   Search,
   Bell,
@@ -45,10 +41,6 @@ const menuItems = [
   { title: "ELVs", icon: Landmark, to: "/admin/elvs" as const },
   { title: "Kreditkarten", icon: CreditCard, to: "/admin/kreditkarten" as const },
   { title: "Preview", icon: FileText, to: "/admin/preview" as const },
-  { title: "Einnahmen", icon: Wallet, to: "/admin" as const, disabled: true },
-  { title: "Mitglieder", icon: Users, to: "/admin" as const, disabled: true },
-  { title: "Auszahlungen", icon: ArrowDownToLine, to: "/admin" as const, disabled: true },
-  { title: "Analytics", icon: BarChart3, to: "/admin" as const, disabled: true },
   { title: "Einstellungen", icon: Settings, to: "/admin" as const, disabled: true },
 ];
 
