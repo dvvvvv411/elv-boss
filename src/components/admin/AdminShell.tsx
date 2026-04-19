@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Landmark,
   CreditCard,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
