@@ -110,7 +110,7 @@ export function EmailPreview({
                 textAlign: "center",
               }}
             >
-              📲 App herunterladen
+              App herunterladen
             </a>
           </div>
 
