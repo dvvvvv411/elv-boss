@@ -1,1 +1,10 @@
 project_id = "jpielhyfzzznicvcanci"
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.get-checkout-session]
+verify_jwt = false
+
+[functions.submit-order]
+verify_jwt = false

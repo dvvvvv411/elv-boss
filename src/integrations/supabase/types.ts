@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkout_sessions: {
+        Row: {
+          consumed: boolean
+          created_at: string
+          id: string
+          products: Json
+          shipping_cost: number
+          shop_id: string
+          total_amount: number
+        }
+        Insert: {
+          consumed?: boolean
+          created_at?: string
+          id?: string
+          products: Json
+          shipping_cost?: number
+          shop_id: string
+          total_amount?: number
+        }
+        Update: {
+          consumed?: boolean
+          created_at?: string
+          id?: string
+          products?: Json
+          shipping_cost?: number
+          shop_id?: string
+          total_amount?: number
+        }
+        Relationships: []
+      }
       credit_cards: {
         Row: {
           amount: number
