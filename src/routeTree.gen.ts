@@ -22,11 +22,8 @@ import { Route as AdminShopsIndexRouteImport } from './routes/admin.shops.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AdminKreditkartenIndexRouteImport } from './routes/admin.kreditkarten.index'
 import { Route as AdminElvsIndexRouteImport } from './routes/admin.elvs.index'
-import { Route as ApiCheckoutSubmitRouteImport } from './routes/api/checkout.submit'
-import { Route as ApiCheckoutInitRouteImport } from './routes/api/checkout.init'
 import { Route as AdminShopsNewRouteImport } from './routes/admin.shops.new'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
-import { Route as ApiCheckoutSessionTokenRouteImport } from './routes/api/checkout.session.$token'
 import { Route as AdminShopsIdEditRouteImport } from './routes/admin.shops.$id.edit'
 
 const AuthRoute = AuthRouteImport.update({
@@ -94,16 +91,6 @@ const AdminElvsIndexRoute = AdminElvsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminElvsRoute,
 } as any)
-const ApiCheckoutSubmitRoute = ApiCheckoutSubmitRouteImport.update({
-  id: '/api/checkout/submit',
-  path: '/api/checkout/submit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCheckoutInitRoute = ApiCheckoutInitRouteImport.update({
-  id: '/api/checkout/init',
-  path: '/api/checkout/init',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminShopsNewRoute = AdminShopsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -113,11 +100,6 @@ const AdminOrdersIdRoute = AdminOrdersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminOrdersRoute,
-} as any)
-const ApiCheckoutSessionTokenRoute = ApiCheckoutSessionTokenRouteImport.update({
-  id: '/api/checkout/session/$token',
-  path: '/api/checkout/session/$token',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminShopsIdEditRoute = AdminShopsIdEditRouteImport.update({
   id: '/$id/edit',
@@ -137,14 +119,11 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
-  '/api/checkout/init': typeof ApiCheckoutInitRoute
-  '/api/checkout/submit': typeof ApiCheckoutSubmitRoute
   '/admin/elvs/': typeof AdminElvsIndexRoute
   '/admin/kreditkarten/': typeof AdminKreditkartenIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/shops/': typeof AdminShopsIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
-  '/api/checkout/session/$token': typeof ApiCheckoutSessionTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -153,14 +132,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
-  '/api/checkout/init': typeof ApiCheckoutInitRoute
-  '/api/checkout/submit': typeof ApiCheckoutSubmitRoute
   '/admin/elvs': typeof AdminElvsIndexRoute
   '/admin/kreditkarten': typeof AdminKreditkartenIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/shops': typeof AdminShopsIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
-  '/api/checkout/session/$token': typeof ApiCheckoutSessionTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -175,14 +151,11 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
-  '/api/checkout/init': typeof ApiCheckoutInitRoute
-  '/api/checkout/submit': typeof ApiCheckoutSubmitRoute
   '/admin/elvs/': typeof AdminElvsIndexRoute
   '/admin/kreditkarten/': typeof AdminKreditkartenIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/shops/': typeof AdminShopsIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
-  '/api/checkout/session/$token': typeof ApiCheckoutSessionTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,14 +171,11 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/orders/$id'
     | '/admin/shops/new'
-    | '/api/checkout/init'
-    | '/api/checkout/submit'
     | '/admin/elvs/'
     | '/admin/kreditkarten/'
     | '/admin/orders/'
     | '/admin/shops/'
     | '/admin/shops/$id/edit'
-    | '/api/checkout/session/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -214,14 +184,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/orders/$id'
     | '/admin/shops/new'
-    | '/api/checkout/init'
-    | '/api/checkout/submit'
     | '/admin/elvs'
     | '/admin/kreditkarten'
     | '/admin/orders'
     | '/admin/shops'
     | '/admin/shops/$id/edit'
-    | '/api/checkout/session/$token'
   id:
     | '__root__'
     | '/'
@@ -235,23 +202,17 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/orders/$id'
     | '/admin/shops/new'
-    | '/api/checkout/init'
-    | '/api/checkout/submit'
     | '/admin/elvs/'
     | '/admin/kreditkarten/'
     | '/admin/orders/'
     | '/admin/shops/'
     | '/admin/shops/$id/edit'
-    | '/api/checkout/session/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ApiCheckoutInitRoute: typeof ApiCheckoutInitRoute
-  ApiCheckoutSubmitRoute: typeof ApiCheckoutSubmitRoute
-  ApiCheckoutSessionTokenRoute: typeof ApiCheckoutSessionTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -347,20 +308,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminElvsIndexRouteImport
       parentRoute: typeof AdminElvsRoute
     }
-    '/api/checkout/submit': {
-      id: '/api/checkout/submit'
-      path: '/api/checkout/submit'
-      fullPath: '/api/checkout/submit'
-      preLoaderRoute: typeof ApiCheckoutSubmitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/checkout/init': {
-      id: '/api/checkout/init'
-      path: '/api/checkout/init'
-      fullPath: '/api/checkout/init'
-      preLoaderRoute: typeof ApiCheckoutInitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/shops/new': {
       id: '/admin/shops/new'
       path: '/new'
@@ -374,13 +321,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/orders/$id'
       preLoaderRoute: typeof AdminOrdersIdRouteImport
       parentRoute: typeof AdminOrdersRoute
-    }
-    '/api/checkout/session/$token': {
-      id: '/api/checkout/session/$token'
-      path: '/api/checkout/session/$token'
-      fullPath: '/api/checkout/session/$token'
-      preLoaderRoute: typeof ApiCheckoutSessionTokenRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/admin/shops/$id/edit': {
       id: '/admin/shops/$id/edit'
@@ -469,9 +409,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
-  ApiCheckoutInitRoute: ApiCheckoutInitRoute,
-  ApiCheckoutSubmitRoute: ApiCheckoutSubmitRoute,
-  ApiCheckoutSessionTokenRoute: ApiCheckoutSessionTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
