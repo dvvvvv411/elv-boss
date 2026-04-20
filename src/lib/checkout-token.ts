@@ -53,10 +53,18 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0;
 }
 
+function toArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  const ab = new ArrayBuffer(u8.byteLength);
+  new Uint8Array(ab).set(u8);
+  return ab;
+}
+
 export async function signToken(payload: CheckoutTokenPayload): Promise<string> {
   const key = await importKey();
   const payloadBytes = enc.encode(JSON.stringify(payload));
-  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, payloadBytes));
+  const sig = new Uint8Array(
+    await crypto.subtle.sign("HMAC", key, toArrayBuffer(payloadBytes)),
+  );
   return `${b64urlEncode(payloadBytes)}.${b64urlEncode(sig)}`;
 }
 
@@ -81,7 +89,9 @@ export async function verifyToken(token: string): Promise<VerifyResult> {
   }
 
   const key = await importKey();
-  const expected = new Uint8Array(await crypto.subtle.sign("HMAC", key, payloadBytes));
+  const expected = new Uint8Array(
+    await crypto.subtle.sign("HMAC", key, toArrayBuffer(payloadBytes)),
+  );
   if (!timingSafeEqual(expected, sigBytes)) return { ok: false, reason: "invalid" };
 
   let payload: CheckoutTokenPayload;
