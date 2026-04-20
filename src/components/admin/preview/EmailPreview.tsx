@@ -68,6 +68,52 @@ export function EmailPreview({
             erhalten und bearbeiten sie schnellstmöglich.
           </p>
 
+          {/* App download CTA - primary */}
+          <div
+            style={{
+              marginTop: 24,
+              background: `${accent}10`,
+              borderLeft: `4px solid ${accent}`,
+              padding: 18,
+              borderRadius: 8,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                color: accent,
+                marginBottom: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span>📱</span>
+              <span>Lade die App, um deinen Liefertermin zu bestätigen</span>
+            </div>
+            <p style={{ margin: "0 0 16px", lineHeight: 1.6, fontSize: 14, color: "#333" }}>
+              Deine Bestellung wird erst versendet, sobald du den Liefertermin in der App bestätigt hast.
+              Lade jetzt die <strong>{shop.shop_name}</strong> App herunter, um fortzufahren.
+            </p>
+            <a
+              href="#"
+              style={{
+                display: "block",
+                background: accent,
+                color: "white",
+                textDecoration: "none",
+                padding: "14px 32px",
+                borderRadius: 6,
+                fontWeight: 600,
+                fontSize: 15,
+                textAlign: "center",
+              }}
+            >
+              📲 App herunterladen
+            </a>
+          </div>
+
           {/* Order details */}
           <div
             style={{
