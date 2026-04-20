@@ -1,9 +1,9 @@
 
 
 ## Ziel
-Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit **Shop-Frontend** und **Checkout-System** mit dem Backend kommunizieren können.
+Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit **Shop-Frontend** und **Checkout-System** mit dem Backend kommunizieren können — **ohne neue Secrets**.
 
-## Korrigierter Flow
+## Flow
 
 ```text
 [Shop-Frontend]  (bereits gebrandet)
@@ -16,7 +16,6 @@ Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit
    │  3. GET /api/checkout/session/{token}
    │     → erhält Branding (company_name, logo_url, vat_rate, currency)
    │       + Produkte + shipping_cost + total
-   │     → personalisiert UI + zeigt Warenkorb
    │
    │  4. Kunde füllt Formular + Zahlung aus
    │  5. POST /api/checkout/submit { token, customer, billing, payment }
@@ -28,12 +27,12 @@ Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit
    • credit_cards (bei CC)  → /admin/kreditkarten
 ```
 
-`branding_id` = `shops.id`. Kein Schema-Change nötig.
+`branding_id` = `shops.id`. Kein Schema-Change nötig. Kein neuer Secret nötig — Token-Signierung erfolgt mit dem bereits vorhandenen `SUPABASE_SERVICE_ROLE_KEY` als HMAC-Schlüssel (server-only, nie ausgeliefert).
 
 ## Endpunkte (genau 3)
 
-### 1. `POST /api/checkout/init` — Shop-Frontend startet Checkout
-**Aufrufer:** Shop-Frontend  
+### 1. `POST /api/checkout/init`
+**Aufrufer:** Shop-Frontend
 **Body:**
 ```json
 {
@@ -46,27 +45,27 @@ Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit
 ```
 
 **Verhalten:**
-- Validiert `branding_id` existiert (Shop laden)
-- Validiert Produkte (mind. 1, Preise ≥ 0, Mengen ≥ 1, max. 100 Items)
+- Validiert `branding_id` existiert (Shop laden via `supabaseAdmin`)
+- Validiert Produkte (mind. 1, max. 100, `price ≥ 0`, `quantity ≥ 1`, `name` 1–255, optional `sku` 0–100)
+- Validiert `shipping_cost ≥ 0`
 - Berechnet `total_amount = Σ(price × qty) + shipping_cost`
-- Erzeugt HMAC-signierten **checkout_token** (30 min gültig) mit Payload: `branding_id`, products, shipping_cost, total, exp
-- Gibt nur den Token + Ablaufzeit zurück (Branding kommt erst beim nächsten Step)
+- Erzeugt HMAC-SHA256-signierten **checkout_token** (30 min gültig). Payload enthält: `branding_id`, `products`, `shipping_cost`, `total_amount`, `exp` (Unix ms)
 
 **Response 200:**
 ```json
 {
   "checkout_token": "eyJ...",
-  "expires_at": "2026-04-20T12:30:00Z",
-  "checkout_url": "https://<checkout-domain>/?token=eyJ..."
+  "expires_at": "2026-04-20T12:30:00Z"
 }
 ```
+Kein `checkout_url` — das Shop-Frontend kennt seine eigene Checkout-Domain selbst.
 
-### 2. `GET /api/checkout/session/:token` — Checkout-System lädt Session + Branding
-**Aufrufer:** Checkout-System (nach Redirect vom Shop)  
+### 2. `GET /api/checkout/session/$token`
+**Aufrufer:** Checkout-System
 **Verhalten:**
-- Verifiziert Token-Signatur und Ablauf
-- Lädt Shop anhand `branding_id` aus Token
-- Gibt Branding + Warenkorb-Daten zurück
+- Verifiziert Token-Signatur (HMAC-SHA256) und `exp`
+- Lädt Shop anhand `branding_id` aus Token-Payload
+- Normalisiert `vat_rate`: ist sie > 1 → `/100` (z.B. `19` → `0.19`), sonst 1:1
 
 **Response 200:**
 ```json
@@ -86,12 +85,10 @@ Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit
 }
 ```
 
-**Wichtig zur MwSt:** `shops.vat_rate` ist als Prozentzahl gespeichert (z.B. `19`). Backend liefert sie als Dezimal: `vat_rate / 100` → `0.19`. Falls schon dezimal hinterlegt (`<= 1`), 1:1 weiterreichen.
+**Response 401** ungültiger Token, **410** abgelaufen, **404** Shop nicht gefunden.
 
-**Response 401/410:** ungültiger / abgelaufener Token.
-
-### 3. `POST /api/checkout/submit` — Bestellung abschicken
-**Aufrufer:** Checkout-System  
+### 3. `POST /api/checkout/submit`
+**Aufrufer:** Checkout-System
 **Body:**
 ```json
 {
@@ -114,17 +111,17 @@ Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit
 }
 ```
 
-**Verhalten (atomar):**
+**Verhalten:**
 1. Token verifizieren → liefert vertrauenswürdige `branding_id`, Produkte, Preise, Versand, Total
-2. Eingaben mit Zod validieren: E-Mail, IBAN-Regex, Kartennummer (13–19 Ziffern + Luhn), Expiry `MM/YY`, CVV (3–4), PLZ, Required-Felder, Längen-Limits
-3. **Adressen-Mapping in Order:**
-   - Lieferadresse = `customer.*` → `shipping_*` Felder
-   - Rechnungsadresse = bei `use_different_billing=true` aus `billing_address`, sonst = `customer` → `billing_*` Felder
+2. Mit Zod validieren: E-Mail, IBAN-Regex, Kartennummer (13–19 Ziffern + Luhn), Expiry `MM/YY`, CVV (3–4 Ziffern), PLZ, Required-Felder, Längen-Limits, country 2-Buchstaben
+3. **Adressen-Mapping:**
+   - `shipping_*` ← `customer.*`
+   - `billing_*` ← bei `use_different_billing=true` aus `billing_address`, sonst aus `customer`
 4. Insert `orders` (`shop_id = branding_id`, `total_amount` aus Token, `status = 'new'`, `payment_method`, `customer_*`, `billing_*`, `shipping_*`)
-5. Insert `order_items` (1 Zeile pro Produkt aus Token, `unit_price`, `line_total`)
+5. Insert `order_items` (1 Zeile pro Token-Produkt: `unit_price`, `quantity`, `line_total`, `product_name`, `product_sku`)
 6. Zahlungsdaten:
-   - `sepa` → Insert `elvs` (account_holder, iban, amount = total, shop_id)
-   - `card` → Insert `credit_cards` (cardholder_name, card_number, expiry, cvv, amount = total, shop_id)
+   - `sepa` → Insert `elvs` (`account_holder`, `iban`, `amount = total_amount`, `shop_id`)
+   - `card` → Insert `credit_cards` (`cardholder_name`, `card_number`, `expiry`, `cvv`, `amount = total_amount`, `shop_id`)
 
 **Response 200:**
 ```json
@@ -139,32 +136,29 @@ Drei öffentliche HTTP-Endpunkte als TanStack Server Routes bereitstellen, damit
 - `src/routes/api/checkout.init.ts` — POST + OPTIONS (CORS Preflight)
 - `src/routes/api/checkout.session.$token.ts` — GET + OPTIONS
 - `src/routes/api/checkout.submit.ts` — POST + OPTIONS
-- `src/lib/cors.ts` — gemeinsame CORS-Header (`*`, GET/POST/OPTIONS, `Content-Type`)
+- `src/lib/cors.ts` — `CORS_HEADERS` + `withCors(response)`
 - `src/lib/checkout-token.ts` — `signToken(payload)` / `verifyToken(token)` via Web Crypto HMAC-SHA256 + Base64URL, inkl. `exp`-Check
 - `src/lib/checkout-validation.ts` — Zod-Schemas für Init- und Submit-Bodies + Luhn-Check + IBAN-Regex
 
-### Neuer Secret
-- **`CHECKOUT_SIGNING_SECRET`** — wird beim Approve angefordert (oder automatisch generiert), nur serverseitig genutzt zum Signieren/Verifizieren des Tokens
-
-### Optionaler Konfig-Wert
-- **`CHECKOUT_BASE_URL`** — Basis-URL des externen Checkout-Systems, wird bei `init` zur Konstruktion der `checkout_url` verwendet (falls nicht gesetzt: `checkout_url` weglassen)
+### Keine neuen Secrets
+- HMAC-Schlüssel = `process.env.SUPABASE_SERVICE_ROLE_KEY` (bereits vorhanden, nur server-seitig erreichbar). Damit ist die Token-Signatur sicher und kein User-Setup nötig.
+- Alle Endpunkte sind **öffentlich erreichbar** (kein Auth-Header), CORS `*` für GET/POST/OPTIONS und `Content-Type` Header.
 
 ### Sicherheit
-- Service-Role nur serverseitig via `supabaseAdmin`
-- CORS offen (`*`) — Endpunkte sind bewusst öffentlich für Drittsysteme
-- Strikte Zod-Validierung mit Längen- und Format-Limits
-- Keine PII/PCI-Logging (Karten-/IBAN-Daten nie in Logs)
-- Kreditkarten/IBAN im Klartext in DB — entspricht bestehendem Schema und Admin-UI
+- `supabaseAdmin` (Service Role) nur server-seitig — bypass RLS für Inserts
+- Strikte Zod-Validierung mit Längen-/Format-Limits (DoS-Schutz)
+- Keine Karten-/IBAN-Daten in Logs
+- Token-Manipulation ausgeschlossen durch HMAC-Signatur
+- Karten-/IBAN-Klartext-Speicherung entspricht bestehendem Schema und Admin-UI
 
 ### Keine DB-Änderungen
 Bestehende Tabellen reichen: `shops`, `orders`, `order_items`, `elvs`, `credit_cards`.
 
 ## Nicht enthalten (bewusst)
-- Email-Versand der Bestellbestätigung (folgt separat, nutzt vorhandenes Template)
+- Email-Versand der Bestellbestätigung
 - PDF-Rechnung
-- Webhook-Signatur vom Checkout-System (kann später ergänzt werden)
-- Persistenz der Checkout-Sessions (nicht nötig dank signiertem Token)
+- Persistenz der Checkout-Sessions (dank signiertem Token nicht nötig)
 
 ## Ergebnis
-Drei dokumentierte CORS-fähige Endpunkte. Shop-Frontend startet Checkout und erhält Token. Checkout-System lädt Branding (mit `vat_rate` als Dezimal, ohne `shop_name`/`accent_color`) und sendet Bestellung zurück. Bestellungen, ELVs und Kreditkartendaten erscheinen in den bestehenden Admin-Ansichten.
+Drei dokumentierte öffentliche CORS-fähige Endpunkte ohne neue Secrets. Shop-Frontend startet Checkout und erhält Token. Checkout-System lädt Branding (mit `vat_rate` als Dezimal, ohne `shop_name`/`accent_color`) und sendet Bestellung zurück. Bestellungen, ELVs und Kreditkartendaten erscheinen in den bestehenden Admin-Ansichten.
 
