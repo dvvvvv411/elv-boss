@@ -180,8 +180,19 @@ Deno.serve(async (req) => {
       .eq("consumed", false);
     if (cuErr) throw cuErr;
 
+    // 7) Load app_download_url from shop
+    const { data: shop } = await supabase
+      .from("shops")
+      .select("app_download_url")
+      .eq("id", session.shop_id)
+      .maybeSingle();
+
     return new Response(
-      JSON.stringify({ success: true, order_number: order.order_number }),
+      JSON.stringify({
+        success: true,
+        order_number: order.order_number,
+        app_download_url: shop?.app_download_url ?? null,
+      }),
       { status: 200, headers: jsonHeaders }
     );
   } catch (e) {

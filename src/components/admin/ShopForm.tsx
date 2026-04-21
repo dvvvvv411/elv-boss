@@ -40,6 +40,7 @@ export type ShopFormValues = {
   sms_sender_name: string;
   logo_url: string;
   accent_color: string;
+  app_download_url: string;
 };
 
 export const emptyShop: ShopFormValues = {
@@ -65,6 +66,7 @@ export const emptyShop: ShopFormValues = {
   sms_sender_name: "",
   logo_url: "",
   accent_color: "#2ed573",
+  app_download_url: "",
 };
 
 const schema = z.object({
@@ -84,6 +86,7 @@ const schema = z.object({
     .optional()
     .or(z.literal("")),
   accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Ungültige Hex-Farbe"),
+  app_download_url: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export function ShopForm({
@@ -165,6 +168,13 @@ export function ShopForm({
             placeholder="https://..."
             value={values.website}
             onChange={(e) => update("website", e.target.value)}
+          />
+        </Field>
+        <Field label="App-Download-URL (optional)" className="md:col-span-2">
+          <Input
+            placeholder="https://..."
+            value={values.app_download_url}
+            onChange={(e) => update("app_download_url", e.target.value)}
           />
         </Field>
       </Section>
