@@ -281,6 +281,7 @@ export type Database = {
         Row: {
           accent_color: string
           address: string | null
+          app_download_url: string | null
           business_owner: string | null
           city: string | null
           commercial_register_number: string | null
@@ -309,6 +310,7 @@ export type Database = {
         Insert: {
           accent_color?: string
           address?: string | null
+          app_download_url?: string | null
           business_owner?: string | null
           city?: string | null
           commercial_register_number?: string | null
@@ -337,6 +339,7 @@ export type Database = {
         Update: {
           accent_color?: string
           address?: string | null
+          app_download_url?: string | null
           business_owner?: string | null
           city?: string | null
           commercial_register_number?: string | null
