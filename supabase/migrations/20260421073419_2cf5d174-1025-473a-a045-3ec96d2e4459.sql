@@ -1,0 +1,1 @@
+ALTER TABLE public.shops ADD COLUMN app_download_url text NULL;
