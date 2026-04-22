@@ -246,7 +246,7 @@ export function renderInvoicePDF(
   doc.setFontSize(8);
 
   items.forEach((it, i) => {
-    if (y > CONTENT_MAX_Y - 10) {
+    if (y > CONTENT_MAX_Y - 40) {
       doc.addPage();
       y = margin;
     }
