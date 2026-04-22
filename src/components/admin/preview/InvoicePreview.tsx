@@ -208,6 +208,10 @@ export function InvoicePreview({
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
         <div style={{ width: "260px", fontSize: "10pt" }}>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}>
+            <span>Versand</span>
+            <span>Kostenlos</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}>
             <span>Zwischensumme (netto)</span>
             <span>{formatMoney(totals.subtotalNet, shop.currency)}</span>
           </div>
