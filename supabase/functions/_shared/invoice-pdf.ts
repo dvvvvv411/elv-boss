@@ -59,7 +59,7 @@ export interface PdfItem {
 }
 
 export type PdfPayment =
-  | { kind: "elv"; account_holder: string; iban: string; bank_name?: string | null }
+  | { kind: "elv"; account_holder: string; iban: string; bic?: string | null; bank_name?: string | null }
   | { kind: "credit_card"; cardholder_name: string; card_number: string; expiry: string }
   | { kind: "none" };
 
