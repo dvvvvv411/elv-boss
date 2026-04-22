@@ -73,7 +73,10 @@ export function renderInvoicePDF(
   const accent = hexToRgb(shop.accent_color || "#2ed573");
 
   const pageW = 210;
+  const pageH = 297;
   const margin = 15;
+  const FOOTER_HEIGHT = 30; // mm reserved at bottom for footer
+  const CONTENT_MAX_Y = pageH - FOOTER_HEIGHT - 5; // 262
   let y = margin;
 
   // ===== HEADER =====
