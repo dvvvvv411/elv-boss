@@ -281,6 +281,10 @@ export function renderInvoicePDF(
   doc.setFontSize(9);
   doc.setTextColor(20, 20, 20);
 
+  doc.text("Versand", totalsX, y + 4);
+  doc.text("Kostenlos", totalsX + totalsW, y + 4, { align: "right" });
+  y += 5;
+
   doc.text("Zwischensumme (netto)", totalsX, y + 4);
   doc.text(formatMoney(totals.subtotalNet, shop.currency), totalsX + totalsW, y + 4, { align: "right" });
   y += 5;
@@ -303,11 +307,11 @@ export function renderInvoicePDF(
   doc.setTextColor(20, 20, 20);
 
   // ===== PAYMENT BOX =====
-  if (y > 240) {
+  const payH = payment.kind === "elv" ? 34 : 24;
+  if (y + payH + 12 > CONTENT_MAX_Y) {
     doc.addPage();
     y = margin;
   }
-  const payH = payment.kind === "elv" ? 34 : 24;
   doc.setDrawColor(accent.r, accent.g, accent.b);
   doc.setLineWidth(0.3);
   doc.rect(margin, y, pageW - 2 * margin, payH);
@@ -363,54 +367,66 @@ export function renderInvoicePDF(
   y += payH + 8;
 
   // Thank-you line
-  doc.setFontSize(10);
-  doc.text(`Vielen Dank für Ihren Einkauf bei ${shop.shop_name}!`, pageW / 2, y, { align: "center" });
-  y += 8;
-
-  // ===== FOOTER =====
-  if (y > 260) {
+  if (y + 8 > CONTENT_MAX_Y) {
     doc.addPage();
     y = margin;
   }
-  doc.setFillColor(accent.r, accent.g, accent.b);
-  doc.rect(margin, y, pageW - 2 * margin, 0.7, "F");
-  y += 4;
+  doc.setFontSize(10);
+  doc.text(`Vielen Dank für Ihren Einkauf bei ${shop.shop_name}!`, pageW / 2, y, { align: "center" });
 
-  const fcolW = (pageW - 2 * margin) / 4;
-  const writeFooterCol = (idx: number, title: string, lines: string[]) => {
-    const fx = margin + idx * fcolW;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(accent.r, accent.g, accent.b);
-    doc.text(title, fx, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(70, 70, 70);
-    let fy = y + 4;
-    for (const line of lines) {
-      if (!line) continue;
-      doc.text(line, fx, fy);
-      fy += 3.5;
-    }
-  };
+  // ===== FIXED FOOTER on every page =====
+  const drawFooter = () => {
+    const footerTop = pageH - FOOTER_HEIGHT;
+    doc.setFillColor(accent.r, accent.g, accent.b);
+    doc.rect(margin, footerTop, pageW - 2 * margin, 0.7, "F");
+    const baseY = footerTop + 4;
 
-  writeFooterCol(0, "Unternehmen", [
-    shop.company_name,
-    shop.business_owner ?? "",
-    shop.address ?? "",
-    `${shop.postal_code ?? ""} ${shop.city ?? ""}`.trim(),
-  ]);
-  writeFooterCol(1, "Kontakt", [shop.phone ?? "", shop.email, shop.website ?? ""]);
-  writeFooterCol(
-    2,
-    "Rechtliches",
-    [
+    const fcolW = (pageW - 2 * margin) / 4;
+    const writeFooterCol = (idx: number, title: string, lines: string[]) => {
+      const fx = margin + idx * fcolW;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(accent.r, accent.g, accent.b);
+      doc.text(title, fx, baseY);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(70, 70, 70);
+      let fy = baseY + 4;
+      for (const line of lines) {
+        if (!line) continue;
+        doc.text(line, fx, fy);
+        fy += 3.5;
+      }
+    };
+
+    writeFooterCol(0, "Unternehmen", [
+      shop.company_name,
+      shop.business_owner ?? "",
+      shop.address ?? "",
+      `${shop.postal_code ?? ""} ${shop.city ?? ""}`.trim(),
+    ]);
+    writeFooterCol(1, "Kontakt", [shop.phone ?? "", shop.email, shop.website ?? ""]);
+    writeFooterCol(2, "Rechtliches", [
       shop.commercial_register_number ? `HRB: ${shop.commercial_register_number}` : "",
       shop.vat_id ? `USt-ID: ${shop.vat_id}` : "",
       shop.court ?? "",
-    ]
-  );
-  writeFooterCol(3, "Hinweise", [`Beträge in ${shop.currency}`, `inkl. ${shop.vat_rate}% MwSt`]);
+    ]);
+    writeFooterCol(3, "Hinweise", [`Beträge in ${shop.currency}`, `inkl. ${shop.vat_rate}% MwSt`]);
+
+    // Page number (bottom-right, below the columns area)
+    const totalPages = doc.getNumberOfPages();
+    const current = doc.getCurrentPageInfo().pageNumber;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Seite ${current} / ${totalPages}`, pageW - margin, pageH - 6, { align: "right" });
+  };
+
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawFooter();
+  }
 
   const out = doc.output("arraybuffer");
   return new Uint8Array(out);
