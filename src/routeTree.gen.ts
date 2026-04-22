@@ -13,11 +13,13 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminTelegramRouteImport } from './routes/admin.telegram'
 import { Route as AdminShopsRouteImport } from './routes/admin.shops'
 import { Route as AdminPreviewRouteImport } from './routes/admin.preview'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminKreditkartenRouteImport } from './routes/admin.kreditkarten'
 import { Route as AdminElvsRouteImport } from './routes/admin.elvs'
+import { Route as AdminTelegramIndexRouteImport } from './routes/admin.telegram.index'
 import { Route as AdminShopsIndexRouteImport } from './routes/admin.shops.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AdminKreditkartenIndexRouteImport } from './routes/admin.kreditkarten.index'
@@ -46,6 +48,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTelegramRoute = AdminTelegramRouteImport.update({
+  id: '/telegram',
+  path: '/telegram',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminShopsRoute = AdminShopsRouteImport.update({
   id: '/shops',
   path: '/shops',
@@ -70,6 +77,11 @@ const AdminElvsRoute = AdminElvsRouteImport.update({
   id: '/elvs',
   path: '/elvs',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminTelegramIndexRoute = AdminTelegramIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminTelegramRoute,
 } as any)
 const AdminShopsIndexRoute = AdminShopsIndexRouteImport.update({
   id: '/',
@@ -116,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/preview': typeof AdminPreviewRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
+  '/admin/telegram': typeof AdminTelegramRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
@@ -123,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/admin/kreditkarten/': typeof AdminKreditkartenIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/shops/': typeof AdminShopsIndexRoute
+  '/admin/telegram/': typeof AdminTelegramIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -136,6 +150,7 @@ export interface FileRoutesByTo {
   '/admin/kreditkarten': typeof AdminKreditkartenIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/shops': typeof AdminShopsIndexRoute
+  '/admin/telegram': typeof AdminTelegramIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
 }
 export interface FileRoutesById {
@@ -148,6 +163,7 @@ export interface FileRoutesById {
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/preview': typeof AdminPreviewRoute
   '/admin/shops': typeof AdminShopsRouteWithChildren
+  '/admin/telegram': typeof AdminTelegramRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/shops/new': typeof AdminShopsNewRoute
@@ -155,6 +171,7 @@ export interface FileRoutesById {
   '/admin/kreditkarten/': typeof AdminKreditkartenIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/shops/': typeof AdminShopsIndexRoute
+  '/admin/telegram/': typeof AdminTelegramIndexRoute
   '/admin/shops/$id/edit': typeof AdminShopsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -168,6 +185,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/preview'
     | '/admin/shops'
+    | '/admin/telegram'
     | '/admin/'
     | '/admin/orders/$id'
     | '/admin/shops/new'
@@ -175,6 +193,7 @@ export interface FileRouteTypes {
     | '/admin/kreditkarten/'
     | '/admin/orders/'
     | '/admin/shops/'
+    | '/admin/telegram/'
     | '/admin/shops/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -188,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin/kreditkarten'
     | '/admin/orders'
     | '/admin/shops'
+    | '/admin/telegram'
     | '/admin/shops/$id/edit'
   id:
     | '__root__'
@@ -199,6 +219,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/preview'
     | '/admin/shops'
+    | '/admin/telegram'
     | '/admin/'
     | '/admin/orders/$id'
     | '/admin/shops/new'
@@ -206,6 +227,7 @@ export interface FileRouteTypes {
     | '/admin/kreditkarten/'
     | '/admin/orders/'
     | '/admin/shops/'
+    | '/admin/telegram/'
     | '/admin/shops/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -245,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/telegram': {
+      id: '/admin/telegram'
+      path: '/telegram'
+      fullPath: '/admin/telegram'
+      preLoaderRoute: typeof AdminTelegramRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/shops': {
       id: '/admin/shops'
       path: '/shops'
@@ -279,6 +308,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/elvs'
       preLoaderRoute: typeof AdminElvsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/telegram/': {
+      id: '/admin/telegram/'
+      path: '/'
+      fullPath: '/admin/telegram/'
+      preLoaderRoute: typeof AdminTelegramIndexRouteImport
+      parentRoute: typeof AdminTelegramRoute
     }
     '/admin/shops/': {
       id: '/admin/shops/'
@@ -385,12 +421,25 @@ const AdminShopsRouteWithChildren = AdminShopsRoute._addFileChildren(
   AdminShopsRouteChildren,
 )
 
+interface AdminTelegramRouteChildren {
+  AdminTelegramIndexRoute: typeof AdminTelegramIndexRoute
+}
+
+const AdminTelegramRouteChildren: AdminTelegramRouteChildren = {
+  AdminTelegramIndexRoute: AdminTelegramIndexRoute,
+}
+
+const AdminTelegramRouteWithChildren = AdminTelegramRoute._addFileChildren(
+  AdminTelegramRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminElvsRoute: typeof AdminElvsRouteWithChildren
   AdminKreditkartenRoute: typeof AdminKreditkartenRouteWithChildren
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminPreviewRoute: typeof AdminPreviewRoute
   AdminShopsRoute: typeof AdminShopsRouteWithChildren
+  AdminTelegramRoute: typeof AdminTelegramRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -400,6 +449,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminPreviewRoute: AdminPreviewRoute,
   AdminShopsRoute: AdminShopsRouteWithChildren,
+  AdminTelegramRoute: AdminTelegramRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
 }
 
