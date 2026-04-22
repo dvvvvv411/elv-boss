@@ -219,10 +219,9 @@ export function renderInvoicePDF(
   const tableW = pageW - 2 * margin;
   const cols = {
     pos: { x: tableX + 1, w: 8, align: "left" as const },
-    desc: { x: tableX + 10, w: 70, align: "left" as const },
-    sku: { x: tableX + 82, w: 22, align: "left" as const },
-    qty: { x: tableX + 110, w: 12, align: "right" as const },
-    vat: { x: tableX + 130, w: 14, align: "right" as const },
+    desc: { x: tableX + 10, w: 92, align: "left" as const },
+    qty: { x: tableX + 112, w: 12, align: "right" as const },
+    vat: { x: tableX + 132, w: 14, align: "right" as const },
     unit: { x: tableX + 158, w: 22, align: "right" as const },
     line: { x: tableX + tableW - 1, w: 25, align: "right" as const },
   };
@@ -236,7 +235,6 @@ export function renderInvoicePDF(
   const hy = y + 4.8;
   doc.text("Pos", cols.pos.x, hy);
   doc.text("Beschreibung", cols.desc.x, hy);
-  doc.text("SKU", cols.sku.x, hy);
   doc.text("Menge", cols.qty.x, hy, { align: "right" });
   doc.text("MwSt", cols.vat.x, hy, { align: "right" });
   doc.text("Einzel netto", cols.unit.x, hy, { align: "right" });
@@ -248,7 +246,7 @@ export function renderInvoicePDF(
   doc.setFontSize(8);
 
   items.forEach((it, i) => {
-    if (y > 250) {
+    if (y > CONTENT_MAX_Y - 10) {
       doc.addPage();
       y = margin;
     }
@@ -256,9 +254,6 @@ export function renderInvoicePDF(
     doc.text(String(i + 1), cols.pos.x, ry);
     const nameLines = doc.splitTextToSize(it.product_name, cols.desc.w);
     doc.text(nameLines, cols.desc.x, ry);
-    doc.setTextColor(120, 120, 120);
-    doc.text(it.product_sku || "—", cols.sku.x, ry);
-    doc.setTextColor(20, 20, 20);
     doc.text(String(it.quantity), cols.qty.x, ry, { align: "right" });
     doc.text(`${shop.vat_rate}%`, cols.vat.x, ry, { align: "right" });
     doc.text(formatMoney(netUnit(it.unit_price, shop.vat_rate), shop.currency), cols.unit.x, ry, {
