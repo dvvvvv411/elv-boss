@@ -2,98 +2,83 @@
 
 ## Ziel
 Nach erfolgreicher Bestellung in `submit-order`:
-1. Rechnungs-PDF lokal in der Edge Function generieren (kein externer Service, `jspdf`)
-2. Bestellbestätigungs-Email per Resend versenden — mit PDF im Anhang
+1. Rechnungs-PDF lokal mit `jspdf` erzeugen (kein externer Service)
+2. Bestellbestätigungs-Email per Resend mit PDF im Anhang versenden
 3. Email **nur** wenn PDF-Generierung erfolgreich
 4. Logo in der Email als **Text** in `shop.accent_color` (kein Bild)
-5. Buttons korrekt verlinken (App-Download + Bestellung-ansehen)
+5. Buttons: App-Download + Bestellung-ansehen
 
 Pro-Shop-Branding aus `shops` (`resend_api_key`, `sender_email`, `sender_name`, `accent_color`, `app_download_url`, `website`).
 
+**Keine neuen Secrets.** Kein DB-Migration. Kein UI-Change.
+
 ---
 
-## 1. Keine DB-Migration nötig
-`shops.website` existiert bereits und wird als Domain-Quelle verwendet. Die Confirmation-URL wird gebaut als:
+## 1. Domain-Quelle
+`shops.website` wird normalisiert (`https?://` strippen, `www.` strippen, trailing `/` strippen) und ergibt:
 ```
 https://checkout.{normalisierte_domain}/confirmation/{order_number}
 ```
-Normalisierung: `https?://` strippen, führendes `www.` strippen, trailing `/` strippen.
 
 ---
 
-## 2. PDF-Generierung — lokal mit `jspdf`
+## 2. PDF-Generierung — `jspdf` lokal in der Edge Function
 
-**Neue Datei:** `supabase/functions/_shared/invoice-math.ts` — Deno-Port von `src/lib/invoice-math.ts` (`maskIban`, `maskCard`, `computeTotals`, `formatMoney`, `formatDate`, `netUnit`).
+**Neue Datei:** `supabase/functions/_shared/invoice-math.ts`
+Deno-Port von `src/lib/invoice-math.ts` (`maskIban`, `maskCard`, `computeTotals`, `formatMoney`, `formatDate`, `netUnit`).
 
 **Neue Datei:** `supabase/functions/_shared/invoice-pdf.ts`
-- Import `jspdf` via `https://esm.sh/jspdf@2.5.2`
+- Import: `https://esm.sh/jspdf@2.5.2`
 - Export `renderInvoicePDF(shop, order, items, payment): Uint8Array`
 - DIN-A4, Helvetica, Akzentfarbe für Header/Trennlinien
 - Inhalt analog `InvoicePreview.tsx`:
-  - Kopfbereich: **Firmenname als Text** in `shop.accent_color` (kein Bild), Adresse, USt-ID, Kontakt
-  - Rechnungsnummer = `order_number`, Datum, Rechnungs- + ggf. Lieferadresse
-  - Items-Tabelle (Pos · Bezeichnung · Menge · Einzelpreis · Gesamt) mit `doc.text()` + `doc.line()`
-  - Totals: Netto, MwSt (`vat_rate`), Versand, Brutto
+  - Kopf: **Firmenname als Text** in `shop.accent_color`, Adresse, USt-ID, Kontakt
+  - Rechnungs-Nr = `order_number`, Datum, Rechnungs- + ggf. Lieferadresse
+  - Items-Tabelle (Pos · Bezeichnung · Menge · Einzel · Gesamt)
+  - Totals: Netto · MwSt · Versand · Brutto
   - Zahlungs-Box: SEPA (maskierte IBAN) **oder** Card (maskierte Nummer)
   - Footer: Geschäftsinhaber, Amtsgericht, HRB, USt-ID
-
-> Hinweis: `jspdf` rendert programmatisch — kein HTML/CSS. Inhaltlich identisch zu `/admin/preview`, visuell saubere PDF-Nachbildung. Pixel-Treue zur React-Preview ist nicht das Ziel.
 
 ---
 
 ## 3. Email-HTML
 
 **Neue Datei:** `supabase/functions/_shared/email-html.ts`
-- Export `renderConfirmationEmailHTML(shop, order, items, links): string`
-- Layout entspricht `EmailPreview.tsx`:
-  - **Header:** `shop.shop_name` als reiner **Text in `shop.accent_color`**, fett, große Schrift, kein `<img>`
-  - Bestätigungstext + Bestellnummer
-  - Bestelldetails-Box (Items + Totals)
-  - Zwei Inline-Buttons:
-    - **„App herunterladen"** → `links.appDownloadUrl` (= `shop.app_download_url`) — ausblenden wenn null
-    - **„Bestellung ansehen"** → `links.orderViewUrl` (aus `shop.website` gebaut) — ausblenden wenn `shop.website` null
-  - Footer mit Firmendaten
+Export `renderConfirmationEmailHTML(shop, order, items, links): string`. Layout analog `EmailPreview.tsx`:
+- Header: `shop.shop_name` als **Text in `shop.accent_color`**, fett, große Schrift, kein `<img>`
+- Bestätigungstext + Bestellnummer
+- Bestelldetails-Box (Items + Totals)
+- Zwei Inline-Buttons:
+  - „App herunterladen" → `shop.app_download_url` (ausblenden wenn null)
+  - „Bestellung ansehen" → aus `shop.website` gebaut (ausblenden wenn null)
+- Footer mit Firmendaten
 
 ---
 
 ## 4. Neue Edge Function `send-order-confirmation`
 
 **Datei:** `supabase/functions/send-order-confirmation/index.ts`
-**`config.toml`:**
-```toml
-[functions.send-order-confirmation]
-verify_jwt = false
-```
-**Auth:** Header `X-Internal-Secret` muss `INTERNAL_FUNCTION_SECRET` matchen, sonst `401`.
+**`config.toml`:** `verify_jwt = false`
+
+**Schutz vor öffentlichem Missbrauch (ohne Secret):** Die Function ist **nicht** über das offene Internet sinnvoll aufrufbar, weil sie zwingend mit dem `SUPABASE_SERVICE_ROLE_KEY` als Bearer-Header aufgerufen werden muss. Dieser Key liegt bereits in den Function-Secrets (siehe `<secrets>`) und wird beim internen `fetch` von `submit-order` mitgesendet. Externe Aufrufer haben den Key nicht → können die Function nicht missbrauchen.
 
 **Body:** `{ "order_id": "uuid" }`
 
 **Ablauf:**
-1. Secret prüfen
+1. Bearer-Token aus `Authorization`-Header gegen `SUPABASE_SERVICE_ROLE_KEY` prüfen → sonst `401`
 2. Lade `orders` + `order_items` + `shops` + jüngste `elvs`/`credit_cards` (per `shop_id` + Halter-Name + neuester `created_at`)
-3. Validiere `shop.resend_api_key`, `shop.sender_email`, `shop.sender_name` — wenn fehlend: `400`, kein Send
-4. PDF generieren via `renderInvoicePDF(...)`. Bei Exception → `500`, kein Email-Send
+3. Validiere `shop.resend_api_key`, `shop.sender_email`, `shop.sender_name` — fehlt etwas → `400`, kein Send
+4. PDF generieren via `renderInvoicePDF(...)`. Exception → `500`, kein Email-Send
 5. PDF → Base64
-6. URLs bauen:
-   - `appDownloadUrl = shop.app_download_url`
-   - `orderViewUrl = shop.website ? \`https://checkout.${normalize(shop.website)}/confirmation/${order.order_number}\` : null`
+6. URLs: `appDownloadUrl = shop.app_download_url`, `orderViewUrl = shop.website ? https://checkout.${normalize(shop.website)}/confirmation/${order.order_number} : null`
 7. Email-HTML via `renderConfirmationEmailHTML(...)`
-8. Resend-Send mit shop-eigenem Key:
-   ```
-   POST https://api.resend.com/emails
-   Authorization: Bearer {shop.resend_api_key}
-   Body: {
-     from: "{shop.sender_name} <{shop.sender_email}>",
-     to: [order.customer_email],
-     subject: "Bestellbestätigung #{order.order_number} – {shop.shop_name}",
-     html: emailHTML,
-     attachments: [{
-       filename: "Rechnung-{order_number}.pdf",
-       content: pdfBase64
-     }]
-   }
-   ```
-9. Bei Resend-Fehler → `500` mit Body durchgereicht
+8. Resend-POST `https://api.resend.com/emails` mit `Authorization: Bearer {shop.resend_api_key}`:
+   - `from`: `{shop.sender_name} <{shop.sender_email}>`
+   - `to`: `[order.customer_email]`
+   - `subject`: `Bestellbestätigung #{order.order_number} – {shop.shop_name}`
+   - `html`: emailHTML
+   - `attachments`: `[{ filename: Rechnung-{order_number}.pdf, content: pdfBase64 }]`
+9. Resend-Fehler → `500` mit Body durchgereicht
 10. Erfolg → `200 { success: true, resend_id }`
 
 ---
@@ -101,38 +86,28 @@ verify_jwt = false
 ## 5. `submit-order` erweitern
 
 Direkt nach erfolgreichem Order-Insert (vor dem Return):
-- Asynchroner `fetch` an `send-order-confirmation` mit Header `X-Internal-Secret` und `{ order_id }`
+- Asynchroner `fetch` an `https://{SUPABASE_URL}/functions/v1/send-order-confirmation` mit `Authorization: Bearer {SUPABASE_SERVICE_ROLE_KEY}` und `{ order_id }`
 - Per `EdgeRuntime.waitUntil(...)` — blockiert die Checkout-Response NICHT
 - Email-/PDF-Fehler werden geloggt, brechen `submit-order` nicht ab
 
 ---
 
-## 6. Neuer Secret
-
-| Secret | Zweck |
-|---|---|
-| `INTERNAL_FUNCTION_SECRET` | Schutz vor öffentlichem Aufruf von `send-order-confirmation` |
-
-`resend_api_key` liegt pro Shop in der DB — kein globaler Secret.
-
----
-
-## 7. Geänderte / neue Dateien
+## 6. Geänderte / neue Dateien
 
 | Datei | Aktion |
 |---|---|
-| `supabase/functions/_shared/invoice-math.ts` | neu (Deno-Port) |
+| `supabase/functions/_shared/invoice-math.ts` | neu |
 | `supabase/functions/_shared/invoice-pdf.ts` | neu (jspdf) |
 | `supabase/functions/_shared/email-html.ts` | neu |
 | `supabase/functions/send-order-confirmation/index.ts` | neu |
 | `supabase/functions/submit-order/index.ts` | um Trigger erweitert |
 | `supabase/config.toml` | Eintrag für neue Function |
 
-Keine DB-Migration. Kein UI-Change in `ShopForm.tsx`.
+Keine DB-Migration. Kein neuer Secret. Kein UI-Change.
 
 ---
 
-## 8. Verhaltens-Matrix
+## 7. Verhaltens-Matrix
 
 | Szenario | Verhalten |
 |---|---|
@@ -145,6 +120,6 @@ Keine DB-Migration. Kein UI-Change in `ShopForm.tsx`.
 
 ---
 
-## 9. Email-Subject
+## 8. Email-Subject
 `Bestellbestätigung #1234567 – Shop Name`
 
