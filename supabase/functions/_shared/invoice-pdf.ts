@@ -276,6 +276,10 @@ export function renderInvoicePDF(
 
   // ===== TOTALS =====
   const totals = computeTotals(items, shop.vat_rate, order.total_amount);
+  if (y + 32 > CONTENT_MAX_Y) {
+    doc.addPage();
+    y = margin;
+  }
   const totalsX = pageW - margin - 70;
   const totalsW = 70;
   doc.setFontSize(9);
