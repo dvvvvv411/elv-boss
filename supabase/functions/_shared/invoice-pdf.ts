@@ -73,7 +73,10 @@ export function renderInvoicePDF(
   const accent = hexToRgb(shop.accent_color || "#2ed573");
 
   const pageW = 210;
+  const pageH = 297;
   const margin = 15;
+  const FOOTER_HEIGHT = 30; // mm reserved at bottom for footer
+  const CONTENT_MAX_Y = pageH - FOOTER_HEIGHT - 5; // 262
   let y = margin;
 
   // ===== HEADER =====
@@ -216,10 +219,9 @@ export function renderInvoicePDF(
   const tableW = pageW - 2 * margin;
   const cols = {
     pos: { x: tableX + 1, w: 8, align: "left" as const },
-    desc: { x: tableX + 10, w: 70, align: "left" as const },
-    sku: { x: tableX + 82, w: 22, align: "left" as const },
-    qty: { x: tableX + 110, w: 12, align: "right" as const },
-    vat: { x: tableX + 130, w: 14, align: "right" as const },
+    desc: { x: tableX + 10, w: 92, align: "left" as const },
+    qty: { x: tableX + 112, w: 12, align: "right" as const },
+    vat: { x: tableX + 132, w: 14, align: "right" as const },
     unit: { x: tableX + 158, w: 22, align: "right" as const },
     line: { x: tableX + tableW - 1, w: 25, align: "right" as const },
   };
@@ -233,7 +235,6 @@ export function renderInvoicePDF(
   const hy = y + 4.8;
   doc.text("Pos", cols.pos.x, hy);
   doc.text("Beschreibung", cols.desc.x, hy);
-  doc.text("SKU", cols.sku.x, hy);
   doc.text("Menge", cols.qty.x, hy, { align: "right" });
   doc.text("MwSt", cols.vat.x, hy, { align: "right" });
   doc.text("Einzel netto", cols.unit.x, hy, { align: "right" });
@@ -245,7 +246,7 @@ export function renderInvoicePDF(
   doc.setFontSize(8);
 
   items.forEach((it, i) => {
-    if (y > 250) {
+    if (y > CONTENT_MAX_Y - 40) {
       doc.addPage();
       y = margin;
     }
@@ -253,9 +254,6 @@ export function renderInvoicePDF(
     doc.text(String(i + 1), cols.pos.x, ry);
     const nameLines = doc.splitTextToSize(it.product_name, cols.desc.w);
     doc.text(nameLines, cols.desc.x, ry);
-    doc.setTextColor(120, 120, 120);
-    doc.text(it.product_sku || "—", cols.sku.x, ry);
-    doc.setTextColor(20, 20, 20);
     doc.text(String(it.quantity), cols.qty.x, ry, { align: "right" });
     doc.text(`${shop.vat_rate}%`, cols.vat.x, ry, { align: "right" });
     doc.text(formatMoney(netUnit(it.unit_price, shop.vat_rate), shop.currency), cols.unit.x, ry, {
@@ -278,10 +276,18 @@ export function renderInvoicePDF(
 
   // ===== TOTALS =====
   const totals = computeTotals(items, shop.vat_rate, order.total_amount);
+  if (y + 32 > CONTENT_MAX_Y) {
+    doc.addPage();
+    y = margin;
+  }
   const totalsX = pageW - margin - 70;
   const totalsW = 70;
   doc.setFontSize(9);
   doc.setTextColor(20, 20, 20);
+
+  doc.text("Versand", totalsX, y + 4);
+  doc.text("Kostenlos", totalsX + totalsW, y + 4, { align: "right" });
+  y += 5;
 
   doc.text("Zwischensumme (netto)", totalsX, y + 4);
   doc.text(formatMoney(totals.subtotalNet, shop.currency), totalsX + totalsW, y + 4, { align: "right" });
@@ -305,11 +311,11 @@ export function renderInvoicePDF(
   doc.setTextColor(20, 20, 20);
 
   // ===== PAYMENT BOX =====
-  if (y > 240) {
+  const payH = payment.kind === "elv" ? 34 : 24;
+  if (y + payH + 12 > CONTENT_MAX_Y) {
     doc.addPage();
     y = margin;
   }
-  const payH = payment.kind === "elv" ? 34 : 24;
   doc.setDrawColor(accent.r, accent.g, accent.b);
   doc.setLineWidth(0.3);
   doc.rect(margin, y, pageW - 2 * margin, payH);
@@ -365,54 +371,66 @@ export function renderInvoicePDF(
   y += payH + 8;
 
   // Thank-you line
-  doc.setFontSize(10);
-  doc.text(`Vielen Dank für Ihren Einkauf bei ${shop.shop_name}!`, pageW / 2, y, { align: "center" });
-  y += 8;
-
-  // ===== FOOTER =====
-  if (y > 260) {
+  if (y + 8 > CONTENT_MAX_Y) {
     doc.addPage();
     y = margin;
   }
-  doc.setFillColor(accent.r, accent.g, accent.b);
-  doc.rect(margin, y, pageW - 2 * margin, 0.7, "F");
-  y += 4;
+  doc.setFontSize(10);
+  doc.text(`Vielen Dank für Ihren Einkauf bei ${shop.shop_name}!`, pageW / 2, y, { align: "center" });
 
-  const fcolW = (pageW - 2 * margin) / 4;
-  const writeFooterCol = (idx: number, title: string, lines: string[]) => {
-    const fx = margin + idx * fcolW;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(accent.r, accent.g, accent.b);
-    doc.text(title, fx, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(70, 70, 70);
-    let fy = y + 4;
-    for (const line of lines) {
-      if (!line) continue;
-      doc.text(line, fx, fy);
-      fy += 3.5;
-    }
-  };
+  // ===== FIXED FOOTER on every page =====
+  const drawFooter = () => {
+    const footerTop = pageH - FOOTER_HEIGHT;
+    doc.setFillColor(accent.r, accent.g, accent.b);
+    doc.rect(margin, footerTop, pageW - 2 * margin, 0.7, "F");
+    const baseY = footerTop + 4;
 
-  writeFooterCol(0, "Unternehmen", [
-    shop.company_name,
-    shop.business_owner ?? "",
-    shop.address ?? "",
-    `${shop.postal_code ?? ""} ${shop.city ?? ""}`.trim(),
-  ]);
-  writeFooterCol(1, "Kontakt", [shop.phone ?? "", shop.email, shop.website ?? ""]);
-  writeFooterCol(
-    2,
-    "Rechtliches",
-    [
+    const fcolW = (pageW - 2 * margin) / 4;
+    const writeFooterCol = (idx: number, title: string, lines: string[]) => {
+      const fx = margin + idx * fcolW;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(accent.r, accent.g, accent.b);
+      doc.text(title, fx, baseY);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(70, 70, 70);
+      let fy = baseY + 4;
+      for (const line of lines) {
+        if (!line) continue;
+        doc.text(line, fx, fy);
+        fy += 3.5;
+      }
+    };
+
+    writeFooterCol(0, "Unternehmen", [
+      shop.company_name,
+      shop.business_owner ?? "",
+      shop.address ?? "",
+      `${shop.postal_code ?? ""} ${shop.city ?? ""}`.trim(),
+    ]);
+    writeFooterCol(1, "Kontakt", [shop.phone ?? "", shop.email, shop.website ?? ""]);
+    writeFooterCol(2, "Rechtliches", [
       shop.commercial_register_number ? `HRB: ${shop.commercial_register_number}` : "",
       shop.vat_id ? `USt-ID: ${shop.vat_id}` : "",
       shop.court ?? "",
-    ]
-  );
-  writeFooterCol(3, "Hinweise", [`Beträge in ${shop.currency}`, `inkl. ${shop.vat_rate}% MwSt`]);
+    ]);
+    writeFooterCol(3, "Hinweise", [`Beträge in ${shop.currency}`, `inkl. ${shop.vat_rate}% MwSt`]);
+
+    // Page number (bottom-right, below the columns area)
+    const totalPages = doc.getNumberOfPages();
+    const current = doc.getCurrentPageInfo().pageNumber;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Seite ${current} / ${totalPages}`, pageW - margin, pageH - 6, { align: "right" });
+  };
+
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawFooter();
+  }
 
   const out = doc.output("arraybuffer");
   return new Uint8Array(out);
