@@ -180,7 +180,6 @@ export function InvoicePreview({
           <tr style={{ background: accent, color: "white" }}>
             <th style={{ padding: "8px", textAlign: "left", width: "30px" }}>Pos</th>
             <th style={{ padding: "8px", textAlign: "left" }}>Beschreibung</th>
-            <th style={{ padding: "8px", textAlign: "left", width: "80px" }}>SKU</th>
             <th style={{ padding: "8px", textAlign: "right", width: "50px" }}>Menge</th>
             <th style={{ padding: "8px", textAlign: "right", width: "60px" }}>MwSt</th>
             <th style={{ padding: "8px", textAlign: "right", width: "80px" }}>Einzel netto</th>
@@ -192,7 +191,6 @@ export function InvoicePreview({
             <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
               <td style={{ padding: "8px" }}>{i + 1}</td>
               <td style={{ padding: "8px" }}>{it.product_name}</td>
-              <td style={{ padding: "8px", color: "#666" }}>{it.product_sku || "—"}</td>
               <td style={{ padding: "8px", textAlign: "right" }}>{it.quantity}</td>
               <td style={{ padding: "8px", textAlign: "right" }}>{shop.vat_rate}%</td>
               <td style={{ padding: "8px", textAlign: "right" }}>
