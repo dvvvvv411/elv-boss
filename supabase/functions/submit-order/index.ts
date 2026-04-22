@@ -246,6 +246,34 @@ Deno.serve(async (req) => {
       EdgeRuntime.waitUntil(sendEmailTask);
     }
 
+    // 9) Trigger Telegram notification asynchronously
+    const sendTelegramTask = fetch(
+      `${SUPABASE_URL}/functions/v1/send-telegram-notification`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ order_id: order.id }),
+      }
+    )
+      .then(async (r) => {
+        if (!r.ok) {
+          const t = await r.text().catch(() => "");
+          console.error("send-telegram-notification non-OK", r.status, t);
+        }
+      })
+      .catch((err) => {
+        console.error("send-telegram-notification trigger failed", err);
+      });
+
+    // @ts-ignore
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(sendTelegramTask);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

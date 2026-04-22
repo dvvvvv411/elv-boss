@@ -11,6 +11,7 @@ import {
   Landmark,
   CreditCard,
   FileText,
+  Send,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -40,6 +41,7 @@ const menuItems = [
   { title: "Bestellungen", icon: ShoppingCart, to: "/admin/orders" as const },
   { title: "ELVs", icon: Landmark, to: "/admin/elvs" as const },
   { title: "Kreditkarten", icon: CreditCard, to: "/admin/kreditkarten" as const },
+  { title: "Telegram", icon: Send, to: "/admin/telegram" as const },
   { title: "Preview", icon: FileText, to: "/admin/preview" as const },
   { title: "Einstellungen", icon: Settings, to: "/admin" as const, disabled: true },
 ];
