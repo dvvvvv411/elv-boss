@@ -26,21 +26,24 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Bearer-Check (Service-Role)
   const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const auth = req.headers.get("Authorization") ?? "";
-  if (auth !== `Bearer ${SERVICE_ROLE_KEY}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: jsonHeaders,
-    });
-  }
-
   const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
   const TELEGRAM_CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID");
 
   try {
     const body = await req.json().catch(() => ({}));
+
+    // Service-Role-Check nur für Produktiv-Aufrufe (mit order_id).
+    // Test-Aufrufe aus dem Admin-UI verwenden User-JWT.
+    if (body?.test !== true) {
+      const auth = req.headers.get("Authorization") ?? "";
+      if (auth !== `Bearer ${SERVICE_ROLE_KEY}`) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: jsonHeaders,
+        });
+      }
+    }
 
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
       console.warn("Telegram secrets not configured");
