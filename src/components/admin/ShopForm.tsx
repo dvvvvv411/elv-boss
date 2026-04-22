@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,15 +94,19 @@ export function ShopForm({
   submitLabel,
   onSubmit,
   onCancel,
+  shopId,
 }: {
   initialValues: ShopFormValues;
   submitLabel: string;
   onSubmit: (values: ShopFormValues) => Promise<void>;
   onCancel: () => void;
+  shopId?: string;
 }) {
   const [values, setValues] = useState<ShopFormValues>(initialValues);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [sendingTestSms, setSendingTestSms] = useState(false);
 
   const update = <K extends keyof ShopFormValues>(key: K, val: ShopFormValues[K]) =>
     setValues((v) => ({ ...v, [key]: val }));
@@ -286,6 +290,58 @@ export function ShopForm({
             onChange={(e) => update("sms_sender_name", e.target.value)}
           />
         </Field>
+        <div className="md:col-span-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+          SMS werden via seven.io versendet. Der API-Key ist serverseitig hinterlegt.
+          {!shopId && " Test-SMS ist erst nach dem Speichern verfügbar."}
+        </div>
+        {shopId && (
+          <Field label="Test-SMS senden an" className="md:col-span-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="z.B. 0176 1234567"
+                value={testPhone}
+                onChange={(e) => setTestPhone(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={sendingTestSms || !testPhone.trim()}
+                onClick={async () => {
+                  setSendingTestSms(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke(
+                      "send-sms-notification",
+                      {
+                        body: {
+                          test: true,
+                          phone: testPhone.trim(),
+                          shop_id: shopId,
+                        },
+                      }
+                    );
+                    if (error) throw error;
+                    if (data?.skipped) {
+                      toast.warning(`Übersprungen: ${data.skipped}`);
+                    } else if (data?.success) {
+                      toast.success(`Test-SMS gesendet an ${data.to}`);
+                    } else {
+                      toast.error(data?.error ?? "Unbekannter Fehler");
+                    }
+                  } catch (err) {
+                    toast.error(
+                      err instanceof Error ? err.message : "Senden fehlgeschlagen"
+                    );
+                  } finally {
+                    setSendingTestSms(false);
+                  }
+                }}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                {sendingTestSms ? "Sendet..." : "Senden"}
+              </Button>
+            </div>
+          </Field>
+        )}
       </Section>
 
       <Section title="Branding">
