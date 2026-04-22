@@ -59,7 +59,7 @@ export interface PdfItem {
 }
 
 export type PdfPayment =
-  | { kind: "elv"; account_holder: string; iban: string; bank_name?: string | null }
+  | { kind: "elv"; account_holder: string; iban: string; bic?: string | null; bank_name?: string | null }
   | { kind: "credit_card"; cardholder_name: string; card_number: string; expiry: string }
   | { kind: "none" };
 
@@ -309,7 +309,7 @@ export function renderInvoicePDF(
     doc.addPage();
     y = margin;
   }
-  const payH = 24;
+  const payH = payment.kind === "elv" ? 34 : 24;
   doc.setDrawColor(accent.r, accent.g, accent.b);
   doc.setLineWidth(0.3);
   doc.rect(margin, y, pageW - 2 * margin, payH);
@@ -336,6 +336,16 @@ export function renderInvoicePDF(
     doc.setFont("courier", "normal");
     doc.text(`IBAN: ${maskIban(payment.iban)}`, margin + 4, py);
     doc.setFont("helvetica", "normal");
+    if (payment.bic) {
+      py += 4.5;
+      doc.setFont("courier", "normal");
+      doc.text(`BIC: ${payment.bic}`, margin + 4, py);
+      doc.setFont("helvetica", "normal");
+    }
+    if (payment.bank_name) {
+      py += 4.5;
+      doc.text(`Bank: ${payment.bank_name}`, margin + 4, py);
+    }
   } else if (payment.kind === "credit_card") {
     doc.setFont("helvetica", "bold");
     doc.text("Kreditkarte", margin + 4, py);

@@ -156,10 +156,38 @@ Deno.serve(async (req) => {
     // 4/5) Payment data
     if (body.payment_method === "sepa") {
       const sepa = body.payment_data.sepa!;
+      const cleanIban = sepa.iban.replace(/\s+/g, "").toUpperCase();
+
+      // Look up BIC + bank name via openiban.com (best-effort, 5s timeout)
+      let bic: string | null = null;
+      let bankName: string | null = null;
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 5000);
+        const ibanResp = await fetch(
+          `https://openiban.com/validate/${encodeURIComponent(cleanIban)}?getBIC=true&validateBankCode=true`,
+          { signal: ctrl.signal }
+        );
+        clearTimeout(t);
+        if (ibanResp.ok) {
+          const ibanJson = await ibanResp.json();
+          if (ibanJson?.valid && ibanJson?.bankData) {
+            bic = ibanJson.bankData.bic || null;
+            bankName = ibanJson.bankData.name || null;
+          }
+        } else {
+          console.warn("openiban non-OK", ibanResp.status);
+        }
+      } catch (lookupErr) {
+        console.warn("openiban lookup failed", lookupErr);
+      }
+
       const { error: eErr } = await supabase.from("elvs").insert({
         shop_id: session.shop_id,
         account_holder: sepa.account_holder,
-        iban: sepa.iban.replace(/\s+/g, "").toUpperCase(),
+        iban: cleanIban,
+        bic,
+        bank_name: bankName,
         amount: total,
       });
       if (eErr) throw eErr;

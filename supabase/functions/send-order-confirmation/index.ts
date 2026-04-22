@@ -103,14 +103,14 @@ Deno.serve(async (req) => {
 
     // Latest payment record (best-effort match by shop_id + holder name)
     let payment:
-      | { kind: "elv"; account_holder: string; iban: string; bank_name?: string | null }
+      | { kind: "elv"; account_holder: string; iban: string; bic?: string | null; bank_name?: string | null }
       | { kind: "credit_card"; cardholder_name: string; card_number: string; expiry: string }
       | { kind: "none" } = { kind: "none" };
 
     if (order.payment_method === "sepa") {
       const { data: elv } = await supabase
         .from("elvs")
-        .select("account_holder, iban, bank_name, amount, created_at")
+        .select("account_holder, iban, bic, bank_name, amount, created_at")
         .eq("shop_id", order.shop_id)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
           kind: "elv",
           account_holder: match.account_holder,
           iban: match.iban,
+          bic: match.bic,
           bank_name: match.bank_name,
         };
       }
