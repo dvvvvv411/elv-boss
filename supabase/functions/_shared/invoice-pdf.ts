@@ -309,7 +309,7 @@ export function renderInvoicePDF(
     doc.addPage();
     y = margin;
   }
-  const payH = 24;
+  const payH = payment.kind === "elv" ? 34 : 24;
   doc.setDrawColor(accent.r, accent.g, accent.b);
   doc.setLineWidth(0.3);
   doc.rect(margin, y, pageW - 2 * margin, payH);
