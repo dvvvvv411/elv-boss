@@ -83,6 +83,7 @@ function EditShopPage() {
           </div>
         ) : (
           <ShopForm
+            shopId={id}
             initialValues={values}
             submitLabel="Änderungen speichern"
             onSubmit={handleSubmit}
