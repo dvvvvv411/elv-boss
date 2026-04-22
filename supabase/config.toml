@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.submit-order]
 verify_jwt = false
+
+[functions.get-order-confirmation]
+verify_jwt = false

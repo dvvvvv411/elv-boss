@@ -181,6 +181,7 @@ export type Database = {
           billing_street: string
           created_at: string
           currency: string
+          customer_company: string | null
           customer_email: string
           customer_first_name: string
           customer_last_name: string
@@ -191,7 +192,10 @@ export type Database = {
           order_number: string
           payment_method: string | null
           shipping_city: string | null
+          shipping_company: string | null
           shipping_country: string | null
+          shipping_first_name: string | null
+          shipping_last_name: string | null
           shipping_postal_code: string | null
           shipping_street: string | null
           shop_id: string
@@ -206,6 +210,7 @@ export type Database = {
           billing_street: string
           created_at?: string
           currency?: string
+          customer_company?: string | null
           customer_email: string
           customer_first_name: string
           customer_last_name: string
@@ -216,7 +221,10 @@ export type Database = {
           order_number?: string
           payment_method?: string | null
           shipping_city?: string | null
+          shipping_company?: string | null
           shipping_country?: string | null
+          shipping_first_name?: string | null
+          shipping_last_name?: string | null
           shipping_postal_code?: string | null
           shipping_street?: string | null
           shop_id: string
@@ -231,6 +239,7 @@ export type Database = {
           billing_street?: string
           created_at?: string
           currency?: string
+          customer_company?: string | null
           customer_email?: string
           customer_first_name?: string
           customer_last_name?: string
@@ -241,7 +250,10 @@ export type Database = {
           order_number?: string
           payment_method?: string | null
           shipping_city?: string | null
+          shipping_company?: string | null
           shipping_country?: string | null
+          shipping_first_name?: string | null
+          shipping_last_name?: string | null
           shipping_postal_code?: string | null
           shipping_street?: string | null
           shop_id?: string
