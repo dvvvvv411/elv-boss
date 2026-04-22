@@ -191,6 +191,33 @@ Deno.serve(async (req) => {
       .eq("id", session.shop_id)
       .maybeSingle();
 
+    // 8) Trigger confirmation email asynchronously — does not block the response
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sendEmailTask = fetch(`${SUPABASE_URL}/functions/v1/send-order-confirmation`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ order_id: order.id }),
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          const t = await r.text().catch(() => "");
+          console.error("send-order-confirmation non-OK", r.status, t);
+        }
+      })
+      .catch((err) => {
+        console.error("send-order-confirmation trigger failed", err);
+      });
+
+    // @ts-ignore — EdgeRuntime is available in Supabase Edge Runtime
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(sendEmailTask);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
